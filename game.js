@@ -1,1681 +1,3244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <link rel="manifest" href="manifest.json"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-  <title>Dashboard — Tenfold Legends</title>
-  <script>
-  (function(){
-    if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(function(){});
-    }
-  })();
-  </script>
-  <link rel="stylesheet" href="style.css"/>
-  <style>
-    .dash-page { min-height: 100vh; padding-bottom: 60px; }
-
-    /* ── HERO WELCOME BANNER ── */
-    .dash-banner {
-      position: relative; overflow: hidden;
-      min-height: 220px;
-      display: flex; align-items: flex-end;
-      padding: 0 40px 28px;
-      border-bottom: 1px solid var(--border);
-    }
-    .dash-banner-bg {
-      position: absolute; inset: 0;
-      background-size: cover; background-position: center top;
-      transition: opacity 0.6s;
-    }
-    .dash-banner-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(
-        90deg,
-        rgba(4,4,12,0.97) 0%,
-        rgba(4,4,12,0.75) 40%,
-        rgba(4,4,12,0.3)  70%,
-        rgba(4,4,12,0.5)  100%
-      );
-    }
-    .dash-banner-content {
-      position: relative; z-index: 2;
-      display: flex; align-items: flex-end; gap: 24px;
-      flex: 1;
-    }
-    .dash-hero-portrait {
-      width: 120px; height: 140px;
-      object-fit: cover; object-position: top;
-      border-radius: 10px;
-      border: 2px solid var(--gold);
-      box-shadow: 0 0 24px rgba(240,192,64,0.4);
-      flex-shrink: 0;
-    }
-    .dash-hero-portrait-fb {
-      width: 120px; height: 140px;
-      border-radius: 10px;
-      border: 2px solid var(--gold);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 4rem;
-      background: rgba(0,0,0,0.5);
-      flex-shrink: 0;
-    }
-    .dash-banner-info { flex: 1; }
-    .dash-welcome {
-      font-size: 0.85rem; color: var(--subtext);
-      letter-spacing: 3px; text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-    .dash-username {
-      font-family: 'Cinzel', serif;
-      font-size: 2.2rem; font-weight: 900;
-      color: var(--gold); letter-spacing: 3px; line-height: 1;
-    }
-    .dash-hero-name {
-      font-family: 'Cinzel', serif;
-      font-size: 1rem; color: var(--text);
-      letter-spacing: 2px; margin-top: 4px;
-    }
-    .dash-hero-name span { color: var(--subtext); font-size: 0.8rem; }
-    .dash-quote {
-      font-style: italic; font-size: 0.82rem;
-      color: var(--subtext); margin-top: 8px;
-      max-width: 400px; line-height: 1.6;
-    }
-    .dash-banner-right {
-      position: relative; z-index: 2;
-      display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
-    }
-    .dash-score-box {
-      text-align: center;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 20px;
-      backdrop-filter: blur(8px);
-      min-width: 130px;
-    }
-    .dash-score-val {
-      font-family: 'Cinzel', serif;
-      font-size: 2rem; font-weight: 900;
-      color: var(--gold); line-height: 1;
-    }
-    .dash-score-lbl {
-      font-size: 0.68rem; color: var(--subtext);
-      letter-spacing: 2px; text-transform: uppercase;
-      margin-top: 3px;
-    }
-    .dash-rank-badge {
-      font-family: 'Cinzel', serif;
-      font-size: 0.82rem; font-weight: 700;
-      padding: 5px 14px; border-radius: 20px;
-      border: 1px solid currentColor;
-      background: rgba(0,0,0,0.5);
-      text-align: center;
-    }
-
-    /* ── GRID LAYOUT ── */
-    .dash-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 18px;
-      max-width: 1280px;
-      margin: 24px auto 0;
-      padding: 0 32px;
-    }
-    @media (max-width: 1050px) { .dash-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 680px)  { .dash-grid { grid-template-columns: 1fr; } }
-
-    /* ── CARD ── */
-    .dash-card {
-      background: rgba(8,8,18,0.92);
-      border: 1px solid rgba(240,192,64,0.15);
-      border-radius: 10px; overflow: hidden;
-      backdrop-filter: blur(12px);
-      transition: border-color 0.2s;
-    }
-    .dash-card:hover { border-color: rgba(240,192,64,0.3); }
-    .dash-card-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px;
-      background: rgba(240,192,64,0.05);
-      border-bottom: 1px solid rgba(240,192,64,0.1);
-    }
-    .dash-card-title {
-      font-family: 'Cinzel', serif;
-      font-size: 0.72rem; color: var(--gold);
-      letter-spacing: 3px; text-transform: uppercase;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .dash-card-action {
-      font-size: 0.72rem; color: var(--subtext);
-      cursor: pointer; transition: color 0.2s;
-      background: none; border: none;
-      font-family: 'Rajdhani', sans-serif;
-      letter-spacing: 1px;
-    }
-    .dash-card-action:hover { color: var(--gold); }
-    .dash-card-body { padding: 16px; }
-
-    /* ── STATS ROW ── */
-    .stats-row {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
-    }
-    .stat-box {
-      text-align: center; padding: 12px 8px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 8px;
-    }
-    .stat-box-val {
-      font-family: 'Cinzel', serif;
-      font-size: 1.5rem; font-weight: 900;
-      line-height: 1; margin-bottom: 4px;
-    }
-    .stat-box-lbl {
-      font-size: 0.65rem; color: var(--subtext);
-      letter-spacing: 1.5px; text-transform: uppercase;
-    }
-
-    /* ── WINRATE BAR ── */
-    .wr-bar-wrap { margin-top: 14px; }
-    .wr-bar-label {
-      display: flex; justify-content: space-between;
-      font-size: 0.75rem; margin-bottom: 5px;
-    }
-    .wr-bar-label span:first-child { color: var(--subtext); }
-    .wr-bar-label span:last-child  { color: var(--gold); font-weight: 700; }
-    .wr-bar { height: 10px; background: rgba(255,255,255,0.07); border-radius:5px; overflow:hidden; }
-    .wr-fill-w { height:100%; float:left; background: linear-gradient(90deg,#006600,#44ff99); border-radius:5px 0 0 5px; transition: width 0.7s; }
-    .wr-fill-l { height:100%; float:left; background: linear-gradient(90deg,#660000,#cc4444); border-radius:0 5px 5px 0; transition: width 0.7s; }
-
-    /* ── MY HERO CARD ── */
-    .my-hero-body {
-      display: flex; gap: 14px; align-items: flex-start;
-    }
-    .my-hero-portrait {
-      width: 80px; height: 95px;
-      object-fit: cover; object-position: top;
-      border-radius: 7px; border: 2px solid var(--border);
-      flex-shrink: 0;
-    }
-    .my-hero-portrait-fb {
-      width: 80px; height: 95px;
-      border-radius: 7px; border: 2px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2.5rem; background: rgba(255,255,255,0.03);
-      flex-shrink: 0;
-    }
-    .my-hero-details { flex: 1; }
-    .my-hero-title-row {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 6px;
-    }
-    .my-hero-name {
-      font-family: 'Cinzel', serif;
-      font-size: 1rem; font-weight: 800; color: var(--gold);
-    }
-    .my-hero-elem {
-      font-size: 0.7rem; font-weight: 700; padding: 2px 7px;
-      border-radius: 20px; border: 1px solid currentColor;
-    }
-    .my-hero-level {
-      font-size: 0.78rem; color: var(--subtext); margin-bottom: 6px;
-    }
-    .xp-bar-wrap { margin-bottom: 8px; }
-    .xp-bar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
-    .xp-bar-label { font-size:0.6rem; font-weight:700; color:#a0c4ff; letter-spacing:2px; text-transform:uppercase; }
-    .xp-bar-val { font-size:0.62rem; color:var(--subtext); }
-    .xp-bar-track { width:100%; height:6px; background:rgba(255,255,255,0.07); border-radius:4px; overflow:hidden; }
-    .xp-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#3a7bd5,#a0c4ff,#3a7bd5); background-size:200% 100%; animation:xpShimmer 2s linear infinite; }
-    @keyframes xpShimmer { 0%{background-position:100% 0;} 100%{background-position:-100% 0;} }
-    .mini-stat-bar { margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
-    .mini-stat-bar-lbl { width: 30px; font-size:0.65rem; color:var(--subtext); text-transform:uppercase; }
-    .mini-stat-bar-track { flex:1; height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
-    .mini-stat-bar-fill  { height:100%; border-radius:3px; }
-    .mini-stat-bar-val { width: 30px; text-align:right; font-size:0.7rem; font-weight:700; }
-
-    .hero-skills-mini {
-      display: flex; gap: 6px; margin-top: 10px;
-    }
-    .skill-mini {
-      width: 36px; height: 36px; border-radius: 5px;
-      border: 1px solid var(--border);
-      object-fit: cover; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; background: rgba(255,255,255,0.03);
-    }
-    .skill-mini img { width:100%; height:100%; object-fit:cover; }
-
-    /* ── STORY PROGRESS CARD ── */
-    .story-prog-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .story-prog-item:last-child { border-bottom: none; }
-    .sp-chapter-icon { font-size: 1.4rem; flex-shrink: 0; }
-    .sp-info { flex: 1; }
-    .sp-chapter-name { font-size: 0.85rem; font-weight: 700; color: var(--text); }
-    .sp-stage-text   { font-size: 0.72rem; color: var(--subtext); margin-top: 1px; }
-    .sp-stars { display: flex; gap: 2px; flex-shrink: 0; }
-    .sp-star  { font-size: 0.78rem; }
-    .sp-star.on  { color: var(--gold); }
-    .sp-star.off { color: rgba(255,255,255,0.15); }
-    .sp-prog-bar-wrap { margin-top: 6px; }
-    .sp-prog-bar { height: 5px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
-    .sp-prog-fill { height:100%; border-radius: 3px; background: linear-gradient(90deg, #a06800, #f0c040); }
-    .sp-prog-txt { font-size: 0.68rem; color: var(--subtext); margin-top: 3px; text-align: right; }
-    .sp-locked { opacity: 0.38; }
-
-    /* ── QUICK ACTIONS ── */
-    .quick-actions { display: flex; flex-direction: column; gap: 8px; }
-    .qa-btn {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 14px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 8px; cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Rajdhani', sans-serif;
-      text-decoration: none;
-    }
-    .qa-btn:hover {
-      background: rgba(240,192,64,0.07);
-      border-color: rgba(240,192,64,0.3);
-      transform: translateX(4px);
-    }
-    .qa-icon { font-size: 1.4rem; flex-shrink: 0; }
-    .qa-text { flex: 1; }
-    .qa-title { font-size: 0.92rem; font-weight: 700; color: var(--text); }
-    .qa-sub   { font-size: 0.72rem; color: var(--subtext); margin-top: 1px; }
-    .qa-arrow { color: var(--subtext); font-size: 1rem; }
-    .qa-btn.highlight {
-      border-color: rgba(240,192,64,0.4);
-      background: rgba(240,192,64,0.06);
-    }
-    .qa-btn.highlight .qa-title { color: var(--gold); }
-
-    /* ── HEROES UNLOCKED ── */
-    .heroes-unlock-grid {
-      display: grid; grid-template-columns: repeat(5,1fr); gap: 7px;
-    }
-    .hu-slot {
-      aspect-ratio: 1;
-      border-radius: 7px;
-      border: 1px solid rgba(255,255,255,0.08);
-      overflow: hidden;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,0.02);
-      transition: transform 0.18s;
-      cursor: pointer;
-    }
-    .hu-slot:hover { transform: scale(1.07); }
-    .hu-slot.locked { filter: grayscale(1) brightness(0.4); cursor: default; }
-    .hu-slot.locked:hover { transform: none; }
-    .hu-slot img { width:100%; height:100%; object-fit:cover; object-position:top; }
-    .hu-slot-fb { font-size: 1.6rem; }
-    .hu-slot-lv {
-      position: absolute; bottom: 2px; right: 3px;
-      font-size: 0.55rem; font-weight: 900;
-      color: var(--gold); text-shadow: 0 1px 3px #000;
-    }
-    .hu-slot-lock {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem;
-    }
-    .hu-slot.active {
-      border-color: var(--gold);
-      box-shadow: 0 0 10px rgba(240,192,64,0.4);
-    }
-
-    /* ── RECENT BATTLES ── */
-    .battle-log-list { display: flex; flex-direction: column; gap: 6px; }
-    .bl-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 9px 10px;
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 7px;
-    }
-    .bl-result {
-      width: 32px; height: 32px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.65rem; font-weight: 900; letter-spacing: 0.5px;
-      flex-shrink: 0;
-    }
-    .bl-result.win  { background: rgba(68,255,153,0.15); border: 1px solid rgba(68,255,153,0.4); color: #44ff99; }
-    .bl-result.lose { background: rgba(233,69,96,0.15);  border: 1px solid rgba(233,69,96,0.4);  color: #ff7090; }
-    .bl-info { flex: 1; }
-    .bl-matchup { font-size: 0.82rem; font-weight: 700; color: var(--text); }
-    .bl-meta    { font-size: 0.7rem;  color: var(--subtext); margin-top: 1px; }
-    .bl-pts {
-      font-family: 'Cinzel', serif;
-      font-size: 0.85rem; font-weight: 900; flex-shrink: 0;
-    }
-    .bl-pts.win  { color: #44ff99; }
-    .bl-pts.lose { color: var(--subtext); }
-    .no-battles {
-      text-align: center; padding: 20px;
-      color: var(--subtext); font-style: italic; font-size: 0.85rem;
-    }
-
-    /* ── LEADERBOARD MINI ── */
-    .lb-mini-row {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .lb-mini-row:last-child { border-bottom: none; }
-    .lb-mini-rank {
-      width: 28px; height: 28px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Cinzel', serif; font-size: 0.75rem; font-weight: 900;
-      flex-shrink: 0;
-    }
-    .lb-mini-rank.r1 { background:rgba(255,215,0,0.15);  border:1.5px solid #ffd700; color:#ffd700; }
-    .lb-mini-rank.r2 { background:rgba(192,192,192,0.15); border:1.5px solid #c0c0c0; color:#c0c0c0; }
-    .lb-mini-rank.r3 { background:rgba(205,127,50,0.15);  border:1.5px solid #cd7f32; color:#cd7f32; }
-    .lb-mini-rank.rn { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); color:var(--subtext); font-size:0.68rem; }
-    .lb-mini-name { flex:1; font-size:0.85rem; font-weight:700; }
-    .lb-mini-name.you { color: var(--gold); }
-    .lb-mini-score { font-family:'Cinzel',serif; font-size:0.85rem; color:var(--gold); font-weight:900; }
-
-    /* ── SPAN 2 ── */
-    .col-span-2 { grid-column: span 2; }
-    @media (max-width: 680px) { .col-span-2 { grid-column: span 1; } }
-
-    /* ── DAILY TIP ── */
-    .tip-card {
-      background: linear-gradient(135deg, rgba(20,5,0,0.9), rgba(10,5,20,0.9));
-      border: 1px solid rgba(240,192,64,0.25);
-    }
-    .tip-body {
-      padding: 16px;
-      display: flex; gap: 12px; align-items: flex-start;
-    }
-    .tip-icon { font-size: 1.8rem; flex-shrink: 0; }
-    .tip-text { font-size: 0.85rem; color: var(--text); line-height: 1.6; }
-    .tip-text strong { color: var(--gold); }
-
-    /* ── NEXT UNLOCK ── */
-    .next-unlock-body { padding: 14px 16px; }
-    .nu-progress-row {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-    }
-    .nu-hero-icon { font-size: 2rem; flex-shrink: 0; }
-    .nu-info { flex: 1; }
-    .nu-hero-name { font-size:0.9rem; font-weight:700; color:var(--text); }
-    .nu-sub { font-size:0.72rem; color:var(--subtext); margin-top:2px; }
-    .nu-bar  { height:8px; background:rgba(255,255,255,0.07); border-radius:4px; overflow:hidden; margin-bottom:4px; }
-    .nu-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#a06800,#f0c040); transition:width 0.7s; }
-    .nu-pts-row {
-      display:flex; justify-content:space-between;
-      font-size:0.72rem; color:var(--subtext);
-    }
-    .nu-pts-row span:last-child { color:var(--gold); font-weight:700; }
-
-    /* ── MOBILE OVERRIDES ── */
-    @media (max-width: 900px) {
-      .dash-grid { grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 16px; margin-top: 16px; }
-      .col-span-2 { grid-column: span 2; }
-      .dash-banner { padding: 0 20px 20px; min-height: 180px; }
-      .dash-banner-content { gap: 14px; }
-      .dash-hero-portrait { width: 90px; height: 108px; }
-      .dash-hero-portrait-fb { width: 90px; height: 108px; font-size: 3rem; }
-      .dash-username { font-size: 1.6rem; }
-      .dash-score-box { padding: 9px 14px; min-width: 100px; }
-      .dash-score-val { font-size: 1.5rem; }
-    }
-
-    @media (max-width: 680px) {
-      .dash-grid { grid-template-columns: 1fr; padding: 0 12px; }
-      .col-span-2 { grid-column: span 1; }
-
-      /* Banner: stack portrait + info vertically on very small screens */
-      .dash-banner { min-height: 160px; padding: 0 14px 16px; }
-      .dash-banner-content { flex-direction: row; gap: 12px; align-items: flex-end; }
-      .dash-banner-right { gap: 6px; }
-      .dash-score-box { padding: 7px 10px; min-width: 80px; }
-      .dash-score-val { font-size: 1.3rem; }
-      .dash-score-lbl { font-size: 0.6rem; }
-      .dash-rank-badge { font-size: 0.72rem; padding: 3px 10px; }
-      .dash-username { font-size: 1.35rem; letter-spacing: 1px; }
-      .dash-welcome { font-size: 0.75rem; letter-spacing: 2px; }
-      .dash-hero-name { font-size: 0.85rem; }
-      .dash-quote { display: none; }
-
-      /* Stats row: tighter */
-      .stats-row { gap: 7px; }
-      .stat-box { padding: 9px 5px; }
-      .stat-box-val { font-size: 1.2rem; }
-
-      /* Heroes roster: 5 cols stays, just smaller */
-      .heroes-unlock-grid { grid-template-columns: repeat(5,1fr); gap: 5px; }
-
-      /* Quick actions: more compact */
-      .qa-btn { padding: 10px 12px; }
-      .qa-title { font-size: 0.88rem; }
-      .qa-sub   { font-size: 0.68rem; }
-
-      /* Battle log items */
-      .bl-item { padding: 7px 8px; gap: 8px; }
-      .bl-result { width: 28px; height: 28px; font-size: 0.6rem; }
-      .bl-matchup { font-size: 0.78rem; }
-      .bl-meta    { font-size: 0.65rem; }
-      .bl-pts     { font-size: 0.78rem; }
-    }
-
-    @media (max-width: 400px) {
-      .dash-grid { padding: 0 8px; gap: 10px; }
-      .dash-banner { padding: 0 10px 14px; min-height: 140px; }
-      .dash-hero-portrait, .dash-hero-portrait-fb { width: 72px; height: 86px; }
-      .dash-username { font-size: 1.15rem; }
-      .dash-card-title { font-size: 0.65rem; letter-spacing: 2px; }
-      .heroes-unlock-grid { grid-template-columns: repeat(5,1fr); gap: 4px; }
-    }
-    @media screen and (orientation: landscape) and (max-height: 600px) {
-
-  /* Keep logout visible on landscape phone */
-  .navbar {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 10px !important;
-    gap: 8px;
-  }
-
-  .navbar-logo {
-    flex-shrink: 0;
-  }
-
-  .navbar-logo span {
-    font-size: 0.75rem !important;
-  }
-
-  .navbar-links {
-    display: flex !important;
-    flex: 1;
-    justify-content: center;
-    gap: 4px !important;
-  }
-
-  .navbar-links .nav-btn {
-    display: inline-flex !important;
-    padding: 6px 7px !important;
-    font-size: 0.62rem !important;
-  }
-
-  .nav-user {
-    display: flex !important;
-    align-items: center;
-    gap: 5px !important;
-    flex-shrink: 0;
-  }
-
-  .nav-user > span {
-    display: none;
-  }
-
-  .nav-score {
-    font-size: 0.65rem !important;
-    padding: 5px 7px !important;
-  }
-
-  /* LOGOUT ALWAYS VISIBLE */
-  .nav-user .danger,
-  .nav-user .btn-sm {
-    display: inline-flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    padding: 6px 9px !important;
-    font-size: 0.62rem !important;
-    white-space: nowrap;
-  }
-
-  /* Hide hamburger because landscape uses full navigation */
-  .nav-hamburger {
-    display: none !important;
-  }
-
-  /* Hide mobile drawer */
-  .nav-mobile-drawer {
-    display: none !important;
-  }
-}
-  </style>
-</head>
-<body class="dash-page">
-<div class="bg-particles"></div>
-
-<!-- NAVBAR -->
-<nav class="navbar">
-  <div class="navbar-logo">
-    <span>TENFOLD LEGENDS</span>
-  </div>
-  <div class="navbar-links">
-    <button class="nav-btn active" onclick="location.href='dashboard.html'">Dashboard</button>
-    <button class="nav-btn" onclick="location.href='characters.html'">Heroes</button>
-    <button class="nav-btn" onclick="location.href='story.html'">Story Mode</button>
-    <button class="nav-btn" onclick="goToArena()">Arena</button>
-    <button class="nav-btn" onclick="location.href='leaderboard.html'">Leaderboard</button>
-  </div>
-  <div class="nav-user">
-    <span>Welcome, <span class="username" id="nav-username">—</span></span>
-    <div class="nav-score">🏆 <span id="nav-score">0</span> pts</div>
-    <button class="nav-btn danger btn-sm" onclick="Game.logout()">Logout</button>
-  </div>
-  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
-<!-- MOBILE DRAWER -->
-<div class="nav-mobile-drawer" id="nav-mobile-drawer">
-  <button class="nav-btn active" onclick="location.href='dashboard.html'">🏠 Dashboard</button>
-  <button class="nav-btn" onclick="location.href='characters.html'">⚔ Heroes</button>
-  <button class="nav-btn" onclick="location.href='story.html'">📖 Story Mode</button>
-  <button class="nav-btn" onclick="goToArena()">🏟 Arena</button>
-  <button class="nav-btn" onclick="location.href='leaderboard.html'">🏆 Leaderboard</button>
-  <div class="nav-user-row">
-    <span class="nav-username-label">Welcome, <span id="nav-username-mobile">—</span></span>
-    <div class="nav-score">🏆 <span id="nav-score-mobile">0</span> pts</div>
-    <button class="nav-btn danger btn-sm" onclick="Game.logout()">Logout</button>
-  </div>
-</div>
-
-<!-- ROTATE TOAST -->
-<div class="rotate-toast" id="rotate-toast">
-  <span class="rotate-toast-icon">📱</span>
-  Rotate to landscape for the best experience
-</div>
-
-<!-- ══════════════ HERO BANNER ══════════════ -->
-<div class="dash-banner" id="dash-banner">
-  <div class="dash-banner-bg" id="banner-bg"></div>
-  <div class="dash-banner-overlay"></div>
-  <div class="dash-banner-content">
-    <div id="banner-portrait"></div>
-    <div class="dash-banner-info">
-      <div class="dash-welcome">Welcome back, Legend</div>
-      <div class="dash-username" id="banner-username">—</div>
-      <div class="dash-hero-name" id="banner-hero-name">
-        <span>Select a hero to see them here</span>
-      </div>
-      <div class="dash-quote" id="banner-quote"></div>
-    </div>
-  </div>
-  <div class="dash-banner-right">
-    <div class="dash-score-box">
-      <div class="dash-score-val" id="banner-score">0</div>
-      <div class="dash-score-lbl">Total Score</div>
-    </div>
-    <div class="dash-rank-badge" id="banner-rank-badge" style="color:var(--gold);">— Unranked —</div>
-  </div>
-</div>
-
-<!-- ══════════════ DASHBOARD GRID ══════════════ -->
-<div class="dash-grid">
-
-  <!-- ── CARD 1: My Stats ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">📊 MY STATS</div>
-      <button class="dash-card-action" onclick="location.href='leaderboard.html'">View Full →</button>
-    </div>
-    <div class="dash-card-body">
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-box-val" id="stat-wins" style="color:#44ff99;">0</div>
-          <div class="stat-box-lbl">Wins</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-box-val" id="stat-losses" style="color:#ff8888;">0</div>
-          <div class="stat-box-lbl">Losses</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-box-val" id="stat-rank" style="color:var(--gold);">—</div>
-          <div class="stat-box-lbl">Global Rank</div>
-        </div>
-      </div>
-      <div class="wr-bar-wrap">
-        <div class="wr-bar-label">
-          <span>Win Rate</span>
-          <span id="wr-pct">0%</span>
-        </div>
-        <div class="wr-bar" style="display:flex;">
-          <div class="wr-fill-w" id="wr-fill-w" style="width:0%"></div>
-          <div class="wr-fill-l" id="wr-fill-l" style="width:0%"></div>
-        </div>
-      </div>
-      <div style="margin-top:14px;display:flex;gap:8px;">
-        <div style="flex:1;text-align:center;padding:7px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:var(--gold);" id="stat-score">0</div>
-          <div style="font-size:0.65rem;color:var(--subtext);letter-spacing:1px;">TOTAL SCORE</div>
-        </div>
-        <div style="flex:1;text-align:center;padding:7px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;" id="stat-tier-val">—</div>
-          <div style="font-size:0.65rem;color:var(--subtext);letter-spacing:1px;">RANK TIER</div>
-        </div>
-        <div style="flex:1;text-align:center;padding:7px;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-          <div style="font-family:'Cinzel',serif;font-size:1rem;font-weight:900;color:var(--gold);" id="stat-unlocked">2</div>
-          <div style="font-size:0.65rem;color:var(--subtext);letter-spacing:1px;">HEROES</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CARD 2: Selected Hero ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">⚔ SELECTED HERO</div>
-      <button class="dash-card-action" onclick="location.href='characters.html'">Change →</button>
-    </div>
-    <div class="dash-card-body" id="hero-card-body">
-      <div style="text-align:center;padding:20px;color:var(--subtext);font-style:italic;font-size:0.85rem;">
-        No hero selected.<br>
-        <a href="characters.html" style="color:var(--gold);">Choose your legend →</a>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CARD 3: Quick Actions ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">🎮 QUICK ACTIONS</div>
-    </div>
-    <div class="dash-card-body">
-      <div class="quick-actions">
-        <div class="qa-btn highlight" onclick="goToArena()" style="cursor:pointer;">
-          <span class="qa-icon">⚔</span>
-          <div class="qa-text">
-            <div class="qa-title">Enter Arena</div>
-            <div class="qa-sub">1v1 Battle · Random Enemy · Random Map</div>
-          </div>
-          <span class="qa-arrow">›</span>
-        </div>
-        <a class="qa-btn" href="story.html">
-          <span class="qa-icon">📖</span>
-          <div class="qa-text">
-            <div class="qa-title">Story Mode</div>
-            <div class="qa-sub" id="qa-story-sub">5 Chapters · 25 Stages</div>
-          </div>
-          <span class="qa-arrow">›</span>
-        </a>
-        <a class="qa-btn" href="characters.html">
-          <span class="qa-icon">🦸</span>
-          <div class="qa-text">
-            <div class="qa-title">My Heroes</div>
-            <div class="qa-sub" id="qa-heroes-sub">View all 10 legends</div>
-          </div>
-          <span class="qa-arrow">›</span>
-        </a>
-        <a class="qa-btn" href="leaderboard.html">
-          <span class="qa-icon">🏆</span>
-          <div class="qa-text">
-            <div class="qa-title">Leaderboard</div>
-            <div class="qa-sub">Check your global ranking</div>
-          </div>
-          <span class="qa-arrow">›</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CARD 4: Story Progress ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">📖 STORY PROGRESS</div>
-      <button class="dash-card-action" onclick="location.href='story.html'">Continue →</button>
-    </div>
-    <div class="dash-card-body" id="story-card-body">
-      <div class="spinner"></div>
-    </div>
-  </div>
-
-  <!-- ── CARD 5: My Heroes Grid ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">🦸 HEROES ROSTER</div>
-      <button class="dash-card-action" onclick="location.href='characters.html'">View All →</button>
-    </div>
-    <div class="dash-card-body">
-      <div class="heroes-unlock-grid" id="heroes-unlock-grid">
-        <!-- JS populated -->
-      </div>
-      <div style="margin-top:10px;text-align:center;font-size:0.72rem;color:var(--subtext);">
-        <span id="unlocked-count">2</span> / 10 Unlocked
-      </div>
-    </div>
-  </div>
-
-  <!-- ── CARD 6: Next Unlock ── -->
-  <div class="dash-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">🔓 NEXT UNLOCK</div>
-    </div>
-    <div class="next-unlock-body" id="next-unlock-body">
-      <div style="color:var(--subtext);font-size:0.82rem;">Loading…</div>
-    </div>
-  </div>
-
-  <!-- ── CARD 7: Leaderboard (span 2) ── -->
-  <div class="dash-card col-span-2">
-    <div class="dash-card-header">
-      <div class="dash-card-title">🏆 LEADERBOARD</div>
-      <button class="dash-card-action" onclick="location.href='leaderboard.html'">Full Board →</button>
-    </div>
-    <div class="dash-card-body" id="battle-log-list">
-      <div class="spinner"></div>
-    </div>
-  </div>
-
-  <!-- ── CARD 9: Daily Tip ── -->
-  <div class="dash-card tip-card">
-    <div class="dash-card-header">
-      <div class="dash-card-title">💡 BATTLE TIP</div>
-    </div>
-    <div class="tip-body">
-      <div class="tip-icon" id="tip-icon">💡</div>
-      <div class="tip-text" id="tip-text">Loading tip…</div>
-    </div>
-  </div>
-
-</div><!-- /dash-grid -->
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<script src="game.js"></script>
-<script>
-// ── GUARD ─────────────────────────────────────────────────────
-if (!Game.requireLogin()) { /* redirected */ }
-
-const user           = Game.user;
-const selectedHeroId = Game.getSelectedHero();
-
-document.getElementById('nav-username').textContent = user.username;
-document.getElementById('nav-score').textContent    = user.totalScore || 0;
-document.getElementById('banner-username').textContent = user.username;
-document.getElementById('banner-score').textContent    = formatNumber(user.totalScore || 0);
-document.getElementById('stat-score').textContent      = formatNumber(user.totalScore || 0);
-
-// ── MOBILE NAV SYNC ───────────────────────────────────────────
-const _mobileUn = document.getElementById('nav-username-mobile');
-const _mobileSc = document.getElementById('nav-score-mobile');
-if (_mobileUn) _mobileUn.textContent = user.username;
-if (_mobileSc) _mobileSc.textContent = user.totalScore || 0;
-
-// ── AUTHORITATIVE SCORE SYNC ─────────────────────────────────
-// Update the dashboard from the exact TotalScore stored in Apps Script.
-Game.syncScore().then((score) => {
-  if (score === null) return;
-  updateScoreUI(score);
-  renderBanner();
-  renderHeroCard();
-  renderNextUnlock();
-});
-
-// ── HAMBURGER ─────────────────────────────────────────────────
-(function() {
-  const btn    = document.getElementById('nav-hamburger');
-  const drawer = document.getElementById('nav-mobile-drawer');
-  if (!btn || !drawer) return;
-  btn.addEventListener('click', () => {
-    const open = drawer.classList.toggle('open');
-    btn.classList.toggle('open', open);
-    btn.setAttribute('aria-expanded', open);
-  });
-  // Close drawer when any nav button inside it is clicked
-  drawer.querySelectorAll('.nav-btn').forEach(b => {
-    b.addEventListener('click', () => {
-      drawer.classList.remove('open');
-      btn.classList.remove('open');
-    });
-  });
-})();
-
-
-
-// ── ROTATE TOAST (soft, shows once per session) ───────────────
-(function() {
-  const toast = document.getElementById('rotate-toast');
-  if (!toast) return;
-  if (safeSessionStorage.getItem('tenfold_rotate_shown')) return;
-
-  function isMobile()  { return window.innerWidth <= 900 || 'ontouchstart' in window; }
-  function isPortrait() {
-    if (screen.orientation && screen.orientation.type)
-      return screen.orientation.type.startsWith('portrait');
-    return window.innerHeight > window.innerWidth;
-  }
-  function check() {
-    if (isMobile() && isPortrait()) {
-      toast.classList.add('show');
-      safeSessionStorage.setItem('tenfold_rotate_shown', '1');
-      setTimeout(() => toast.classList.remove('show'), 5000);
-    }
-  }
-  // Slight delay so page layout is done first
-  setTimeout(check, 300);
-  window.addEventListener('orientationchange', () => setTimeout(check, 200));
-})();
-
-// ── LOCAL DATA ────────────────────────────────────────────────
-let levels   = JSON.parse(safeLocalStorage.getItem('tenfold_levels_'   + user.userID) || '{}');
-let progress = JSON.parse(safeLocalStorage.getItem('tenfold_story_'    + user.userID) || '{}');
-
-// Rebuild unlocked list strictly from story progress — never trust raw localStorage
-// which may have stale values from server data (e.g. lyra hardcoded as unlocked).
-(function rebuildUnlockedDashboard() {
-  const UNLOCK_AFTER = {
-    aeron:0, lyra:1, kael:2, riven:3, selene:4,
-    draven:5, mira:6, orion:7, brutus:8, elysia:9
-  };
-  const rebuilt = ['aeron'];
-  for (const [hid, afterCh] of Object.entries(UNLOCK_AFTER)) {
-    if (afterCh === 0) continue;
-    const bossKey = `${afterCh}_5`;
-    if (progress[bossKey] && progress[bossKey].completed && !rebuilt.includes(hid)) {
-      rebuilt.push(hid);
-    }
-  }
-  safeLocalStorage.setItem('tenfold_unlocked_' + user.userID, JSON.stringify(rebuilt));
-})();
-let unlocked = JSON.parse(safeLocalStorage.getItem('tenfold_unlocked_' + user.userID) || '["aeron"]');
-
-// ── RANK TIERS ────────────────────────────────────────────────
-const RANK_TIERS = [
-  { name:'Bronze',   min:0,    max:499,    color:'#cd7f32', icon:'🥉' },
-  { name:'Silver',   min:500,  max:999,    color:'#c0c0c0', icon:'🥈' },
-  { name:'Gold',     min:1000, max:1999,   color:'#ffd700', icon:'🥇' },
-  { name:'Platinum', min:2000, max:3499,   color:'#00cfff', icon:'💎' },
-  { name:'Diamond',  min:3500, max:5999,   color:'#c8a8ff', icon:'♦'  },
-  { name:'Legend',   min:6000, max:999999, color:'#ff4500', icon:'👑' },
-];
-function getTier(score) {
-  return RANK_TIERS.find(t => score >= t.min && score <= t.max) || RANK_TIERS[0];
-}
-
-// ── BATTLE TIPS ───────────────────────────────────────────────
-const TIPS = [
-  { icon:'⚡', text: '<strong>Use Ultimate wisely</strong> — it costs 80 MP. Build up mana with basic attacks before unleashing it.' },
-  { icon:'❄️', text: '<strong>Lyra\'s Frozen Prison</strong> skips the enemy\'s next turn. Use it right before their ultimate to waste it.' },
-  { icon:'🔥', text: '<strong>Aeron\'s burn</strong> deals 5% max HP per turn. Stack it with Inferno Burst for massive damage over time.' },
-  { icon:'🛡', text: '<strong>Brutus\'s Steel Guard</strong> reduces incoming damage by 60%. Use it when the enemy is about to use their ultimate.' },
-  { icon:'💧', text: '<strong>Mira\'s Healing Tide</strong> restores 150 HP. Use it when HP drops below 35% to turn the fight around.' },
-  { icon:'🎯', text: '<strong>Draven\'s Dark Step</strong> has a higher crit chance. Combine it with a basic attack follow-up for maximum burst.' },
-  { icon:'🌙', text: '<strong>Selene\'s Moonfall</strong> always crits. Save your 80 MP for the decisive final blow.' },
-  { icon:'🔮', text: '<strong>Elysia\'s Mana Surge</strong> boosts ATK for 2 turns. Activate it before using Celestial Judgment for maximum damage.' },
-  { icon:'⚔', text: '<strong>Keyboard shortcuts:</strong> Q = Basic Skill, W = Special Skill, E = Ultimate Skill. React faster in battle!' },
-  { icon:'🏆', text: '<strong>Unlock heroes through Story Mode</strong> — defeat each chapter\'s Boss to unlock the next hero!' },
-];
-
-// ── BANNER ────────────────────────────────────────────────────
-function renderBanner() {
-  if (selectedHeroId && HEROES[selectedHeroId]) {
-    const h  = HEROES[selectedHeroId];
-    const bg = (h.sprites.backgrounds && h.sprites.backgrounds[0]) || '';
-    if (bg) document.getElementById('banner-bg').style.backgroundImage = `url('${bg}')`;
-
-    // Portrait
-    const pWrap = document.getElementById('banner-portrait');
-    if (h.sprites.portrait) {
-      const img = document.createElement('img');
-      img.src = h.sprites.portrait;
-      img.className = 'dash-hero-portrait';
-      img.alt = h.name;
-      img.onerror = function() {
-        const fb = document.createElement('div');
-        fb.className = 'dash-hero-portrait-fb';
-        fb.textContent = ELEMENT_ICONS[h.element];
-        this.parentNode.replaceChild(fb, this);
-      };
-      pWrap.innerHTML = '';
-      pWrap.appendChild(img);
-    } else {
-      pWrap.innerHTML = `<div class="dash-hero-portrait-fb">${ELEMENT_ICONS[h.element]}</div>`;
-    }
-
-    document.getElementById('banner-hero-name').innerHTML =
-      `${h.name} <span>· ${h.title} · ${ELEMENT_ICONS[h.element]} ${h.element}</span>`;
-    document.getElementById('banner-quote').textContent = h.quote;
-  }
-
-  // Rank badge
-  const score = user.totalScore || 0;
-  const tier  = getTier(score);
-  const badge = document.getElementById('banner-rank-badge');
-  badge.textContent = `${tier.icon} ${tier.name}`;
-  badge.style.color = tier.color;
-  badge.style.borderColor = tier.color;
-}
-
-// ── STATS ─────────────────────────────────────────────────────
-function renderStats(wins, losses, globalRank) {
-  const total = wins + losses;
-  const wr    = total ? Math.round(wins / total * 100) : 0;
-  const wrW   = total ? Math.round(wins   / total * 100) : 0;
-  const wrL   = total ? Math.round(losses / total * 100) : 0;
-
-  document.getElementById('stat-wins').textContent    = wins;
-  document.getElementById('stat-losses').textContent  = losses;
-  document.getElementById('stat-rank').textContent    = globalRank ? '#' + globalRank : '—';
-  document.getElementById('wr-pct').textContent       = wr + '%';
-  document.getElementById('wr-fill-w').style.width    = wrW + '%';
-  document.getElementById('wr-fill-l').style.width    = wrL + '%';
-
-  const tier = getTier(user.totalScore || 0);
-  document.getElementById('stat-tier-val').textContent   = tier.icon + ' ' + tier.name;
-  document.getElementById('stat-tier-val').style.color   = tier.color;
-  document.getElementById('stat-unlocked').textContent   = unlocked.length;
-  document.getElementById('unlocked-count').textContent  = unlocked.length;
-}
-
-// ── HERO CARD ─────────────────────────────────────────────────
-function renderHeroCard() {
-  const body = document.getElementById('hero-card-body');
-  if (!selectedHeroId || !HEROES[selectedHeroId]) return;
-  const h  = HEROES[selectedHeroId];
-  const lv = levels[selectedHeroId] || 1;
-  const xp = levels[selectedHeroId + '_xp'] || 0;
-  const xpNeeded = lv * 100;
-  const xpPct = Math.min(100, Math.round(xp / xpNeeded * 100));
-  const st = getScaledStats(selectedHeroId, lv);
-  const maxSt = { hp:1500, atk:200, def:160, spd:160, crit:50 };
-
-  const portraitHtml = h.sprites.portrait
-    ? `<img src="${h.sprites.portrait}" class="my-hero-portrait" alt="${h.name}"
-          onerror="this.style.display='none'">`
-    : `<div class="my-hero-portrait-fb">${ELEMENT_ICONS[h.element]}</div>`;
-
-  function miniBar(lbl, val, max, color) {
-    const pct = Math.min(100, Math.round(val / max * 100));
-    return `
-      <div class="mini-stat-bar">
-        <span class="mini-stat-bar-lbl">${lbl}</span>
-        <div class="mini-stat-bar-track"><div class="mini-stat-bar-fill" style="width:${pct}%;background:${color};"></div></div>
-        <span class="mini-stat-bar-val" style="color:${color};">${val}</span>
-      </div>`;
-  }
-
-  // Skill icons
-  let skillsHtml = '';
-  ['basic','special','ultimate'].forEach(t => {
-    const sk = h.skills[t];
-    const iconHtml = sk.icon
-      ? `<img src="${sk.icon}" alt="${sk.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
-      : ELEMENT_ICONS[h.element];
-    skillsHtml += `
-      <div class="skill-mini" title="${sk.name}: ${sk.desc}"
-           style="border-color:${t==='ultimate'?'rgba(240,192,64,0.5)':t==='special'?'rgba(60,130,255,0.4)':'rgba(160,160,160,0.3)'};">
-        ${iconHtml}
-      </div>`;
-  });
-
-  body.innerHTML = `
-    <div class="my-hero-body">
-      ${portraitHtml}
-      <div class="my-hero-details">
-        <div class="my-hero-title-row">
-          <span class="my-hero-name">${h.name}</span>
-          <span class="my-hero-elem" style="color:${h.color};border-color:${h.color};">
-            ${ELEMENT_ICONS[h.element]} ${h.element}
-          </span>
-        </div>
-        <div class="my-hero-level">Level ${lv} · ${h.fightingStyle}</div>
-        <div class="xp-bar-wrap">
-          <div class="xp-bar-header">
-            <span class="xp-bar-label">EXP</span>
-            <span class="xp-bar-val">${xp} / ${xpNeeded}</span>
-          </div>
-          <div class="xp-bar-track">
-            <div class="xp-bar-fill" style="width:${xpPct}%;"></div>
-          </div>
-        </div>
-        ${miniBar('HP',  st.hp,   maxSt.hp,   '#ff5555')}
-        ${miniBar('ATK', st.atk,  maxSt.atk,  '#ffaa44')}
-        ${miniBar('SPD', st.spd,  maxSt.spd,  '#44ffaa')}
-      </div>
-    </div>
-    <div style="margin-top:10px;">
-      <div style="font-size:0.65rem;color:var(--subtext);letter-spacing:2px;margin-bottom:6px;">SKILLS</div>
-      <div class="hero-skills-mini">${skillsHtml}</div>
-    </div>
-  `;
-}
-
-// ── STORY PROGRESS ────────────────────────────────────────────
-const CHAPTER_DATA = [
-  { id:1,  title:'The Awakening',               icon:'🔥', stages:5, heroId:'aeron'  },
-  { id:2,  title:'The Shattered Realm',         icon:'❄️', stages:5, heroId:'lyra'   },
-  { id:3,  title:'Shadows and Stars',           icon:'⚡', stages:5, heroId:'kael'   },
-  { id:4,  title:'Rise of the Iron Legion',     icon:'🌍', stages:5, heroId:'riven'  },
-  { id:5,  title:'The Final Reckoning',         icon:'✨', stages:5, heroId:'selene' },
-  { id:6,  title:"Draven's Shadow",             icon:'🌑', stages:5, heroId:'draven' },
-  { id:7,  title:"Mira's Deep",                 icon:'💧', stages:5, heroId:'mira'   },
-  { id:8,  title:"Orion's Tempest",             icon:'🌪️', stages:5, heroId:'orion'  },
-  { id:9,  title:"Brutus's Iron Siege",         icon:'⚙️', stages:5, heroId:'brutus' },
-  { id:10, title:"Elysia's Celestial Tower",    icon:'🔮', stages:5, heroId:'elysia' },
-];
-
-// ── MIGRATE old ch{N}_st{N} keys → {N}_{N} keys ──────────────
-(function migrateStoryKeys() {
-  const storyStorageKey = 'tenfold_story_' + (user && user.userID || '');
-  if (!storyStorageKey.endsWith('_')) {
-    const raw = safeLocalStorage.getItem(storyStorageKey);
-    if (!raw) return;
-    let prog;
-    try { prog = JSON.parse(raw); } catch(e) { return; }
-    let changed = false;
-    const newProg = {};
-    Object.keys(prog).forEach(k => {
-      const m = k.match(/^ch(\d+)_st(\d+)$/);
-      if (m) {
-        const newKey = `${m[1]}_${m[2]}`;
-        const existing = newProg[newKey] || prog[newKey];
-        if (!existing || (prog[k].stars || 0) > (existing.stars || 0)) {
-          newProg[newKey] = prog[k];
-        }
-        changed = true;
-      } else {
-        newProg[k] = prog[k];
+// ============================================================
+// TENFOLD LEGENDS — game.js
+// Shared hero data, sprite paths, API helpers, game state
+// ============================================================
+
+// ── PC / DESKTOP STORAGE ───────────────────────────────────────
+// This game is designed to run directly in a normal PC/Desktop
+// browser. No MIT App Inventor / WebViewer dependency is required.
+//
+// localStorage is used for the browser session. If the browser blocks
+// storage, a temporary in-memory fallback keeps the page from crashing.
+(function () {
+  function makeMemoryStore() {
+    const data = Object.create(null);
+    return {
+      getItem(key) {
+        return Object.prototype.hasOwnProperty.call(data, key) ? data[key] : null;
+      },
+      setItem(key, value) {
+        data[key] = String(value);
+      },
+      removeItem(key) {
+        delete data[key];
+      },
+      clear() {
+        Object.keys(data).forEach(key => delete data[key]);
       }
-    });
-    if (changed) {
-      safeLocalStorage.setItem(storyStorageKey, JSON.stringify(newProg));
-      // Update the in-memory progress object too
-      Object.keys(progress).forEach(k => { if (/^ch\d+_st\d+$/.test(k)) delete progress[k]; });
-      Object.assign(progress, newProg);
+    };
+  }
+
+  function getBrowserStorage(name) {
+    try {
+      const store = window[name];
+      if (!store) return null;
+
+      const testKey = '__tenfold_storage_test__';
+      store.setItem(testKey, '1');
+      store.removeItem(testKey);
+      return store;
+    } catch (_) {
+      return null;
     }
   }
+
+  // PC/Desktop browser storage.
+  window.safeLocalStorage = getBrowserStorage('localStorage') || makeMemoryStore();
+  window.safeSessionStorage = getBrowserStorage('sessionStorage') || makeMemoryStore();
+
+  // Explicitly mark this build as browser/desktop.
+  window.TENFOLD_PC_MODE = true;
 })();
 
-function renderStoryProgress() {
-  const body = document.getElementById('story-card-body');
-  let html   = '';
-  let totalDone = 0, totalStars = 0;
-  let nextChapter = null, nextStage = null;
+// ── APPS SCRIPT WEB APP URL ───────────────────────────────────
+// After deploying Code.gs as a Web App, paste the URL here:
+const API_URL = 'https://script.google.com/macros/s/AKfycbynm1v4E7ChqiPUHQevsjWiTMbVdVOp9EGRRTUEDfYhnTrJA9yLeDGQ2Bv0GsSpFbxFEQ/exec';
 
-  CHAPTER_DATA.forEach((ch, ci) => {
-    const done  = Array.from({length: ch.stages}, (_,i) =>
-      progress[`${ch.id}_${i+1}`]?.completed).filter(Boolean).length;
-    const stars = Array.from({length: ch.stages}, (_,i) =>
-      progress[`${ch.id}_${i+1}`]?.stars || 0).reduce((a,b) => a+b, 0);
-    const locked = ci > 0 && CHAPTER_DATA[ci-1] &&
-      Array.from({length:CHAPTER_DATA[ci-1].stages},(_,i) =>
-        progress[`${CHAPTER_DATA[ci-1].id}_${i+1}`]?.completed).filter(Boolean).length < CHAPTER_DATA[ci-1].stages;
-
-    totalDone  += done;
-    totalStars += stars;
-
-    if (!nextChapter && done < ch.stages && !locked) {
-      nextChapter = ch.id;
-      nextStage   = done + 1;
+// ── HERO DATABASE ─────────────────────────────────────────────
+const HEROES = {
+  aeron: {
+    id: 'aeron',
+    facesRight: true,   // sprite default faces RIGHT
+    name: 'Aeron',
+    title: 'Flameborn',
+    quote: '"Flames do not just burn, they forge legends."',
+    element: 'Fire',
+    weapon: 'Greatsword',
+    fightingStyle: 'Aggressive / Heavy Damage',
+    role: 'Damage Dealer',
+    color: '#ff4500',
+    glowColor: 'rgba(255,69,0,0.6)',
+    bgColor: '#1a0800',
+    // Base stats (Lv 1)
+    stats: { hp: 1000, atk: 120, def: 80, spd: 90, crit: 15 },
+    // Sprite paths
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_idle.webp',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_walk.webp',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_run.webp',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_sprint.webp',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_attack.webp',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_hero_profile_portrait.webp',
+      lifeBar: 'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_life_bar_ui.webp',
+      manaBar: 'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Level_Badge_Nameplate.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_1background.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_2background.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_3background.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_4background.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name: 'Flame Slash',
+        type: 'Basic Skill',
+        desc: 'Fast sword slash that deals fire damage.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_FlameSlash_basic_skill_icon.webp',
+        manaCost: 5,
+        damage: 80,
+        cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_flame_slash_frame_6_transparent.webp'
+        ]
+      },
+      special: {
+        name: 'Inferno Burst',
+        type: 'Special Skill',
+        desc: 'Releases a wave of fire toward the enemy.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_infernoBurst_special_skill_icon.webp',
+        manaCost: 10,
+        damage: 160,
+        cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_inferno_burst_frame_6_transparent.webp'
+        ]
+      },
+      ultimate: {
+        name: 'Phoenix Reign',
+        type: 'Ultimate Skill',
+        desc: 'Surrounds himself with flames and performs a powerful burning attack.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_PhoenixReign_ultimate_skill_icon.webp',
+        manaCost: 20,
+        damage: 300,
+        cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/aeron_Phoenix_Reign_frame_6_transparent.webp'
+        ]
+      }
     }
+  },
 
-    const pct = Math.round(done / ch.stages * 100);
-    const starsHtml = Array.from({length:3}, (_,i) =>
-      `<span class="sp-star ${i < Math.floor(stars / ch.stages) ? 'on' : 'off'}">★</span>`).join('');
-
-    html += `
-      <div class="story-prog-item ${locked ? 'sp-locked' : ''}">
-        <span class="sp-chapter-icon">${ch.icon}</span>
-        <div class="sp-info">
-          <div class="sp-chapter-name">${ch.title}</div>
-          <div class="sp-stage-text">${done}/${ch.stages} stages · ${stars}★</div>
-          <div class="sp-prog-bar-wrap">
-            <div class="sp-prog-bar"><div class="sp-prog-fill" style="width:${pct}%"></div></div>
-          </div>
-        </div>
-        <div class="sp-stars">${starsHtml}</div>
-      </div>`;
-  });
-
-  // Update story quick action text
-  if (nextChapter) {
-    document.getElementById('qa-story-sub').textContent =
-      `Continue: Chapter ${nextChapter}, Stage ${nextStage}`;
-  }
-
-  body.innerHTML = html;
-}
-
-// ── HEROES ROSTER GRID ────────────────────────────────────────
-function renderHeroesGrid() {
-  const grid = document.getElementById('heroes-unlock-grid');
-  grid.innerHTML = '';
-  HERO_ORDER.forEach(id => {
-    const h       = HEROES[id];
-    const isUnlck = unlocked.includes(id);
-    const lv      = levels[id] || 1;
-    const isSel   = id === selectedHeroId;
-
-    const slot = document.createElement('div');
-    slot.className = `hu-slot ${isUnlck ? '' : 'locked'} ${isSel ? 'active' : ''}`;
-    slot.title     = `${h.name} — ${h.title}${!isUnlck ? ' (Locked)' : ' Lv ' + lv}`;
-    slot.onclick   = () => isUnlck && (location.href='characters.html');
-
-    if (h.sprites.portrait && isUnlck) {
-      slot.innerHTML = `
-        <img src="${h.sprites.portrait}" alt="${h.name}"
-          onerror="this.outerHTML='<div class=\\"hu-slot-fb\\">${ELEMENT_ICONS[h.element]}</div>'">
-        <div class="hu-slot-lv">Lv${lv}</div>`;
-    } else {
-      slot.innerHTML = `
-        <div class="hu-slot-fb">${ELEMENT_ICONS[h.element]}</div>
-        ${!isUnlck ? '<div class="hu-slot-lock">🔒</div>' : `<div class="hu-slot-lv">Lv${lv}</div>`}`;
+  lyra: {
+    id: 'lyra',
+    facesRight: false,  // sprite default faces LEFT
+    name: 'Lyra',
+    title: 'Frostblade',
+    quote: '"The cold is not my weakness, it is my strength."',
+    element: 'Ice',
+    weapon: 'Dual Blades',
+    fightingStyle: 'Fast & Agile',
+    role: 'Damage Dealer',
+    color: '#00cfff',
+    glowColor: 'rgba(0,207,255,0.6)',
+    bgColor: '#00101a',
+    stats: { hp: 1000, atk: 120, def: 89, spd: 100, crit: 15 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Idle.webp',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_walk.webp',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Run.webp',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Run.webp',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_attack.webp',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Frostblade_Profile.webp',
+      lifeBar: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_life_bar_ui.webp',
+      manaBar: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Level_Badge_Nameplate.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_background3.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name: 'Frost Cut',
+        type: 'Basic Skill',
+        desc: 'Two quick ice-infused strikes.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Frost_Cut_Skill_Icon.webp',
+        manaCost: 5,
+        damage: 80,
+        cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frost_cut_frame_6_transparent.webp'
+        ]
+      },
+      special: {
+        name: 'Frozen Prison',
+        type: 'Special Skill',
+        desc: 'Freezes the enemy temporarily.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Frozen_Prison_Skill_Icon.webp',
+        manaCost: 10,
+        damage: 120,
+        cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_frozen_prison_frame_6_transparent.webp'
+        ]
+      },
+      ultimate: {
+        name: 'Absolute Zero',
+        type: 'Ultimate Skill',
+        desc: 'Creates a massive ice explosion that heavily damages the enemy.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_Absolute_Zero.webp',
+        manaCost: 20,
+        damage: 300,
+        cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_1_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_2_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_3_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_4_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_5_transparent.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lyra_absolute_zero_frame_6_transparent.png'
+        ]
+      }
     }
-    grid.appendChild(slot);
-  });
+  },
 
-  document.getElementById('qa-heroes-sub').textContent =
-    `${unlocked.length} unlocked · ${10 - unlocked.length} locked`;
-}
-
-// ── NEXT UNLOCK ───────────────────────────────────────────────
-// Heroes are unlocked by clearing the previous chapter's boss (Stage 5).
-// This section shows which chapter to complete next to unlock the next hero.
-function renderNextUnlock() {
-  const body = document.getElementById('next-unlock-body');
-
-  // Find the first hero not yet unlocked, in story chapter order
-  // Chapter 1 hero (aeron) is always the starter — skip it.
-  // Each subsequent hero is unlocked by clearing the previous chapter's boss.
-  const nextChData = CHAPTER_DATA.find(ch => ch.id > 1 && !unlocked.includes(ch.heroId));
-
-  if (!nextChData) {
-    body.innerHTML = `
-      <div style="text-align:center;padding:16px;">
-        <div style="font-size:2rem;margin-bottom:8px;">🎉</div>
-        <div style="font-family:'Cinzel',serif;color:var(--gold);font-size:0.9rem;letter-spacing:2px;">ALL HEROES UNLOCKED!</div>
-        <div style="font-size:0.75rem;color:var(--subtext);margin-top:6px;">You have collected all 10 legends.</div>
-      </div>`;
-    return;
-  }
-
-  const h        = HEROES[nextChData.heroId];
-  const prevChId = nextChData.id - 1;
-  const prevCh   = CHAPTER_DATA.find(c => c.id === prevChId);
-
-  // How many stages done in the previous chapter (need all 5, especially boss)
-  const stagesDone = Array.from({length: prevCh.stages}, (_, i) =>
-    progress[`${prevChId}_${i+1}`]?.completed).filter(Boolean).length;
-  const pct  = Math.round(stagesDone / prevCh.stages * 100);
-  const bossCleared = progress[`${prevChId}_5`]?.completed;
-
-  body.innerHTML = `
-    <div class="nu-progress-row">
-      <div class="nu-hero-icon">${ELEMENT_ICONS[h.element]}</div>
-      <div class="nu-info">
-        <div class="nu-hero-name">${h.name} <span style="font-size:0.72rem;color:var(--subtext);">· ${h.title}</span></div>
-        <div class="nu-sub">${h.element} · ${h.fightingStyle}</div>
-      </div>
-    </div>
-    <div style="font-size:0.7rem;color:var(--subtext);margin:6px 0 4px;letter-spacing:1px;">
-      Complete Chapter ${prevChId}: ${prevCh.icon} ${prevCh.title}
-    </div>
-    <div class="nu-bar"><div class="nu-fill" style="width:${pct}%;"></div></div>
-    <div class="nu-pts-row">
-      <span>${stagesDone}/${prevCh.stages} stages</span>
-      <span>${bossCleared ? '✅ Boss cleared!' : `👑 Beat Stage 5 Boss`}</span>
-    </div>
-    <div style="margin-top:12px;">
-      <a class="qa-btn" href="story.html" style="padding:10px 12px;">
-        <span class="qa-icon" style="font-size:1.1rem;">📖</span>
-        <div class="qa-text">
-          <div class="qa-title" style="font-size:0.82rem;">Go to Story Mode to unlock ${h.name}</div>
-          <div class="qa-sub">Clear Chapter ${prevChId} Boss → ${h.name} unlocked!</div>
-        </div>
-      </a>
-    </div>
-  `;
-}
-
-// ── LEADERBOARD FULL (replaces Recent Battles card) ──────────
-function renderRecentBattles(_unused) {
-  // This slot now shows the full leaderboard mini — called after
-  // entries are loaded. Actual rendering is done by renderLbFull().
-}
-
-function renderLbFull(entries) {
-  const body = document.getElementById('battle-log-list');
-  if (!entries || entries.length === 0) {
-    body.innerHTML = `<div style="text-align:center;color:var(--subtext);font-size:0.82rem;padding:20px;">No rankings yet. Win a battle to appear here!</div>`;
-    return;
-  }
-
-  const myEntry = entries.find(e => e.userID === user.userID);
-  const top10   = entries.slice(0, 10);
-  const showMe  = myEntry && myEntry.rank > 10;
-
-  let html = `<div class="lb-mini-list" style="display:flex;flex-direction:column;gap:4px;">`;
-
-  top10.forEach(e => {
-    const isMe  = e.userID === user.userID;
-    const rcls  = e.rank <= 3 ? `r${e.rank}` : 'rn';
-    const medal = e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : '#' + e.rank;
-    const wins   = e.wins   || 0;
-    const losses = e.losses || 0;
-    const total  = wins + losses;
-    const wr     = total ? Math.round(wins / total * 100) : 0;
-    const tier   = getTier(e.totalScore || 0);
-    html += `
-      <div class="lb-mini-row" style="${isMe ? 'background:rgba(240,192,64,0.08);border-radius:7px;padding:8px 8px;' : 'padding:6px 8px;'}">
-        <div class="lb-mini-rank ${rcls}">${medal}</div>
-        <div style="flex:1;min-width:0;">
-          <div class="lb-mini-name ${isMe ? 'you' : ''}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            ${e.username}${isMe ? ' <span style="font-size:0.6rem;color:var(--gold);">(You)</span>' : ''}
-          </div>
-          <div style="font-size:0.65rem;color:${tier.color};margin-top:1px;">${tier.icon} ${tier.name} · ${wins}W ${losses}L · ${wr}% WR</div>
-        </div>
-        <div class="lb-mini-score">${formatNumber(e.totalScore)}</div>
-      </div>`;
-  });
-
-  if (showMe) {
-    html += `<div style="text-align:center;color:var(--subtext);font-size:0.7rem;padding:3px 0;">···</div>`;
-    const rcls = myEntry.rank <= 3 ? `r${myEntry.rank}` : 'rn';
-    const wins   = myEntry.wins   || 0;
-    const losses = myEntry.losses || 0;
-    const total  = wins + losses;
-    const wr     = total ? Math.round(wins / total * 100) : 0;
-    const tier   = getTier(myEntry.totalScore || 0);
-    html += `
-      <div class="lb-mini-row" style="background:rgba(240,192,64,0.08);border-radius:7px;padding:8px 8px;">
-        <div class="lb-mini-rank ${rcls}">#${myEntry.rank}</div>
-        <div style="flex:1;min-width:0;">
-          <div class="lb-mini-name you">${myEntry.username} <span style="font-size:0.6rem;">(You)</span></div>
-          <div style="font-size:0.65rem;color:${tier.color};margin-top:1px;">${tier.icon} ${tier.name} · ${wins}W ${losses}L · ${wr}% WR</div>
-        </div>
-        <div class="lb-mini-score">${formatNumber(myEntry.totalScore)}</div>
-      </div>`;
-  }
-
-  html += `</div>`;
-  body.innerHTML = html;
-}
-
-// renderLbMini removed — leaderboard is now shown in the full card (renderLbFull)
-
-// ── BATTLE TIP ────────────────────────────────────────────────
-function renderTip() {
-  const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
-  document.getElementById('tip-icon').textContent  = tip.icon;
-  document.getElementById('tip-text').innerHTML    = tip.text;
-}
-
-// ══════════════════════════════════════════════════════════════
-// FULL BI-DIRECTIONAL SYNC HELPERS
-// ══════════════════════════════════════════════════════════════
-
-// Storage keys (all scoped to userID)
-function SK(suffix) { return 'tenfold_' + suffix + '_' + user.userID; }
-const KEY = {
-  pending:  () => SK('pending_scores'),
-  levels:   () => SK('levels'),
-  unlocked: () => SK('unlocked'),
-  skills:   () => SK('skills'),
-  story:    () => SK('story'),
-  battles:  () => SK('battles'),
-  lbCache:  () => 'tenfold_lb_cache',
-  scoreCache: () => SK('score_cache'),
+  // ── Heroes 3-10: no sprites yet, placeholder data ─────────
+  kael: {
+    id: 'kael', facesRight: true, name: 'Kael', title: 'Storm Hunter',
+    quote: '"Lightning is not just a force... it\'s my weapon, my will, and my path."',
+    element: 'Lightning', weapon: 'Spear', fightingStyle: 'Speed & Precision', role: 'Damage Dealer',
+    color: '#ffe600', glowColor: 'rgba(255,230,0,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 950, atk: 130, def: 70, spd: 120, crit: 20 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_life_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Level_Badge_Nameplate.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_background2.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Thunder Thrust', type:'Basic Skill', desc:'Lightning-powered spear attack.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Thunder_Thrust_Skill_Icon.webp',
+        manaCost:5, damage:90, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/kael_thunder_thrust_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Lightning Rush', type:'Special Skill', desc:'Dashes through the enemy with multiple strikes.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Lighting_Rush_Skill_Icon.webp',
+        manaCost:10, damage:180, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_lightning_rush_effect_only_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Storm Judgment', type:'Ultimate Skill', desc:'Summons several lightning strikes from the sky.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_Storm_Judgment_Skill_Icon.webp',
+        manaCost:20, damage:320, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Kael_storm_judgment_transparent_frame_6.webp'
+        ]
+      }
+    }
+  },
+  riven: {
+    id: 'riven', facesRight: false, name: 'Riven', title: 'Earthbreaker',
+    quote: '"The earth does not yield to the weak."',
+    element: 'Earth', weapon: 'War Hammer', fightingStyle: 'Slow & Heavy', role: 'Damage Dealer',
+    color: '#a0522d', glowColor: 'rgba(160,82,45,0.6)', bgColor: '#0d0800',
+    stats: { hp: 1200, atk: 110, def: 100, spd: 60, crit: 10 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_life_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Level_Badge_Template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_background2.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Stone Smash', type:'Basic Skill', desc:'Heavy hammer attack.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_Basic_Skill_Icon.webp',
+        manaCost:5, damage:100, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Stone_Smash_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Earth Wall', type:'Special Skill', desc:'Creates a barrier that reduces incoming damage.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_Special_Skill_Icon.webp',
+        manaCost:10, damage:0, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Earth_Wall_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Mountain Collapse', type:'Ultimate Skill', desc:'Smashes the ground, creating a massive shockwave.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:350, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Riven_Mountain_Collapse_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  selene: {
+    id: 'selene', facesRight: true, name: 'Selene', title: 'Moon Archer',
+    quote: '"The moon guides my arrow, and the stars light my path."',
+    element: 'Light', weapon: 'Bow', fightingStyle: 'Ranged & Precise', role: 'Damage Dealer',
+    color: '#c8a8ff', glowColor: 'rgba(200,168,255,0.6)', bgColor: '#0a0014',
+    stats: { hp: 900, atk: 140, def: 60, spd: 110, crit: 25 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/selene_life_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Level_Badge_Nameplate.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_background3.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Lunar Arrow', type:'Basic Skill', desc:'Shoots a fast energy arrow.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar__Arrow_Basic_Skill_Icon.webp',
+        manaCost:5, damage:95, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Lunar_Arrow_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Moon Rain', type:'Special Skill', desc:'Fires multiple arrows from above.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_Special_Skill_Icon.webp',
+        manaCost:10, damage:190, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Rain_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Moonfall', type:'Ultimate Skill', desc:'Launches a giant light arrow that deals massive damage.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Fall_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:330, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selene_Moon_Fall_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selena_Moon_Fall_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selena_Moon_Fall_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selena_Moon_Fall_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selena_Moon_Fall_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Selena_Moon_Fall_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  draven: {
+    id: 'draven', facesRight: false, name: 'Draven', title: 'Shadow Fang',
+    quote: '"The shadows are my home, and the night is my weapon."',
+    element: 'Dark', weapon: 'Twin Daggers', fightingStyle: 'Stealth / Agile', role: 'Assassin',
+    color: '#9932cc', glowColor: 'rgba(153,50,204,0.6)', bgColor: '#0a0010',
+    stats: { hp: 850, atk: 160, def: 70, spd: 130, crit: 28 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_life_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Level_Badge_Template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_background3.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_background4.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_background5.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Shadow Strike', type:'Basic Skill', desc:'Quick attack from behind the enemy.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_Basic_Skill_Icon.webp',
+        manaCost:5, damage:105, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Shadow_Strike_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Dark Step', type:'Special Skill', desc:'Becomes invisible briefly and performs a critical strike.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_Special_Skill_Icon.webp',
+        manaCost:10, damage:200, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Dark_Step_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Nightmare Execution', type:'Ultimate Skill', desc:'Rapidly attacks the enemy from multiple directions.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_ultimate_Skill_Icon.webp',
+        manaCost:20, damage:360, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Draven_Nightmare_Execution_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  mira: {
+    id: 'mira', facesRight: false, name: 'Mira', title: 'Tidecaller',
+    quote: '"The ocean never forgets, and neither do I."',
+    element: 'Water', weapon: 'Trident', fightingStyle: 'Magic / Control', role: 'Support / Damage',
+    color: '#00bfff', glowColor: 'rgba(0,191,255,0.6)', bgColor: '#000d1a',
+    stats: { hp: 920, atk: 130, def: 85, spd: 95, crit: 15 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Profile_Portfait.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/mira_hp_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_ManaEnergy_Bar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Level_Badge_Template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_background3.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_background5.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Water Pierce', type:'Basic Skill', desc:'Thrusts the trident with water energy.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_WaterPierce_Basic_Skill_Icon.webp',
+        manaCost:5, damage:85, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Water_Pierce_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Healing Tide', type:'Special Skill', desc:'Restores a portion of own HP.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_Special_Skill_Icon.webp',
+        manaCost:10, damage:-400, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Healing_Tide_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:"Ocean's Wrath", type:'Ultimate Skill', desc:'Summons a huge wave that damages the opponent.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:310, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Mira_Ocean_Wrath_s_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  orion: {
+    id: 'orion', facesRight: false, name: 'Orion', title: 'Stormcaller',
+    quote: '"The wind does not ask permission — and neither do I."',
+    element: 'Wind', weapon: 'Dual Blades', fightingStyle: 'Swift / Agile', role: 'Damage Dealer',
+    color: '#88ffcc', glowColor: 'rgba(136,255,204,0.6)', bgColor: '#001a0d',
+    stats: { hp: 920, atk: 135, def: 75, spd: 130, crit: 22 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_hp_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Manabar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Level_Badge_Template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_background3.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Wind Slash', type:'Basic Skill', desc:'A razor-fast dual-blade slash charged with wind.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_Basic_Skill_Icon.webp',
+        manaCost:5, damage:90, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Wind_Slash_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Orion_Wind_Slash_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Gale Dash', type:'Special Skill', desc:'Dashes through the enemy at blinding speed, striking multiple times.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_Special_Skill_Icon.webp',
+        manaCost:10, damage:175, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Gale_Dash_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Tempest Dance', type:'Ultimate Skill', desc:'Launches a massive wind burst that launches the enemy skyward.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:340, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Orion_Tempest_Dance_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  brutus: {
+    id: 'brutus', facesRight: false, name: 'Brutus', title: 'Iron Guardian',
+    quote: '"My shield protects what matters. My axe delivers justice."',
+    element: 'Metal', weapon: 'Shield & Axe', fightingStyle: 'Heavy / Defensive', role: 'Tank',
+    color: '#c0c0c0', glowColor: 'rgba(192,192,192,0.6)', bgColor: '#111111',
+    stats: { hp: 1300, atk: 120, def: 130, spd: 65, crit: 10 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_hp_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_Manabar.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_level_badge_template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_background3.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_background4.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Iron Bash', type:'Basic Skill', desc:'Shield strike followed by an axe attack.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_Iron_Bash_Basic_Skill_Icon.webp',
+        manaCost:5, damage:90, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Iron_Bash_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Steel Guard', type:'Special Skill', desc:'Raises a steel guard, reducing incoming damage by 60% for this turn.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_Steel_Guard_Special_Skill_Icon.webp',
+        manaCost:10, damage:0, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Steel_Guard_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Titan Breaker', type:'Ultimate Skill', desc:'Charges forward and delivers a devastating strike.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/brutus_Titan_Breaker_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:340, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Brutus_Titan_Breaker_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
+  elysia: {
+    id: 'elysia', facesRight: false, name: 'Elysia', title: 'Celestial Mage',
+    quote: '"The stars are not just lights, they are within us."',
+    element: 'Arcane', weapon: 'Magic Staff', fightingStyle: 'Magic / Burst', role: 'Mage',
+    color: '#ff88ff', glowColor: 'rgba(255,136,255,0.6)', bgColor: '#100010',
+    stats: { hp: 850, atk: 150, def: 60, spd: 100, crit: 28 },
+    sprites: {
+      idle:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_idle.webp',
+      walk:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_walk.webp',
+      run:      'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_run.webp',
+      sprint:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_sprint.webp',
+      attack:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Portfait_Profile.webp',
+      lifeBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/elysia_hp_bar_ui.webp',
+      manaBar:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Manabar_Energy.webp',
+      namePlate:'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Level_Badge_Template.webp',
+      backgrounds: [
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_background1.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_background2.webp',
+        'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_background3.webp'
+      ]
+    },
+    skills: {
+      basic: {
+        name:'Arcane Bolt', type:'Basic Skill', desc:'Fires magical energy at the opponent.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_Basic_Skill_Icon.webp',
+        manaCost:5, damage:100, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Arcane_Bolt_effect_frame_6.webp'
+        ]
+      },
+      special: {
+        name:'Mana Surge', type:'Special Skill', desc:'Increases attack power and restores some HP.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_Special_Skill_Icon.webp',
+        manaCost:10, damage:-600, cooldown:3,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Mana_Surge_effect_frame_6.webp'
+        ]
+      },
+      ultimate: {
+        name:'Celestial Judgment', type:'Ultimate Skill', desc:'Releases a powerful beam of cosmic energy.',
+        icon:'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_Ultimate_Skill_Icon.webp',
+        manaCost:20, damage:380, cooldown:6,
+        frames:[
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Elysia_Celestial_Judgment_effect_frame_6.webp'
+        ]
+      }
+    }
+  },
 };
 
-// ── FLUSH PENDING OFFLINE SCORES ─────────────────────────────
-// Pushes any battles queued while offline to the server.
-// Returns number of records successfully flushed.
-async function flushPendingScores() {
-  const pending = JSON.parse(safeLocalStorage.getItem(KEY.pending()) || '[]');
-  if (pending.length === 0) return 0;
+// Ordered list for UI  (Chapter unlock order: 1→10)
+const HERO_ORDER = ['aeron','lyra','kael','riven','selene','draven','mira','orion','brutus','elysia'];
 
-  let flushed = 0;
-  const remaining = [];
+// ── STORY ENEMY DATABASE ──────────────────────────────────────
+// Monsters used in story stages (non-hero enemies)
+const STORY_ENEMIES = {
 
-  for (const p of pending) {
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 1 — THE AWAKENING  (Fire enemies)
+  // ══════════════════════════════════════════════════════════
+  flame_imp: {
+    id: 'flame_imp', facesRight: false, spriteScale: 1.25,
+    name: 'Flame Imp', title: 'Fire Minion',
+    element: 'Fire', role: 'Monster',
+    color: '#ff4500', glowColor: 'rgba(255,69,0,0.6)', bgColor: '#1a0800',
+    stats: { hp: 420, atk: 75, def: 40, spd: 85, crit: 10 },
+    sprites: {
+      idle:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-idle.webp',
+      walk:   'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-walk.webp',
+      run:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-run.webp',
+      sprint: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-sprint.webp',
+      attack: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-attack.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-idle.webp',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-1background.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Flame Claw', type: 'Basic Skill', desc: 'Slashes with burning claws.',
+        icon: '', manaCost: 0, damage: 75, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame4.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame5.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Flame-Imp-Flame_Claw_Effect_Frame6.webp'
+        ]
+      },
+      special:  { name: 'Ember Burst',  type: 'Special Skill',  desc: 'Releases a burst of embers.', icon: '', manaCost: 10, damage: 110, cooldown: 3, frames: [] },
+      ultimate: { name: 'Inferno Rush', type: 'Ultimate Skill', desc: 'Charges with full body aflame.', icon: '', manaCost: 20, damage: 200, cooldown: 6, frames: [] }
+    }
+  },
+
+  ash_wolf: {
+    id: 'ash_wolf', facesRight: false, spriteScale: 1.3,
+    name: 'Ash Wolf', title: 'Fire Beast',
+    element: 'Fire', role: 'Monster',
+    color: '#ff6600', glowColor: 'rgba(255,102,0,0.6)', bgColor: '#1a0800',
+    stats: { hp: 560, atk: 95, def: 55, spd: 100, crit: 12 },
+
+    sprites: {
+      idle:   'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-idle.webp',
+      walk:   'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-walk.webp',
+      run:    'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-sprint.webp',
+      sprint: 'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-sprint.webp',
+      attack: 'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-walk.webp',
+      portrait: 'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-idle.webp',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-2background.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Ash Bite', type: 'Basic Skill', desc: 'Lunges and bites with lava-infused jaws.',
+        icon: '', manaCost: 0, damage: 95, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-Basic_Skill_Effect_Frame_1.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-Basic_Skill_Effect_Frame_2.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-Basic_Skill_Effect_Frame_3.webp',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/AshWolf-Basic_Skill_Effect_Frame_4.webp'
+        ]
+      },
+      special:  { name: 'Lava Howl',   type: 'Special Skill',  desc: 'Releases a scorching howl that burns the enemy.', icon: '', manaCost: 10, damage: 130, cooldown: 3, frames: [] },
+      ultimate: { name: 'Magma Frenzy', type: 'Ultimate Skill', desc: 'Unleashes a wild flurry of magma-coated strikes.', icon: '', manaCost: 20, damage: 240, cooldown: 6, frames: [] }
+    }
+  },
+
+  magma_scorcher: {
+    id: 'magma_scorcher', facesRight: false, spriteScale: 1.5,
+    name: 'Magma Scorcher', title: 'Lava Predator',
+    element: 'Fire', role: 'Monster',
+    color: '#ff5500', glowColor: 'rgba(255,85,0,0.6)', bgColor: '#1a0600',
+    stats: { hp: 640, atk: 108, def: 60, spd: 95, crit: 14 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-idle2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-idle2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-4background.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Scorch Strike', type: 'Basic Skill', desc: 'Claws the enemy with superheated talons.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-basicskill.png', manaCost: 0, damage: 82, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-basicskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-basicskilleffect2.png'
+        ]
+      },
+      special:  { name: 'Lava Surge',    type: 'Special Skill',  desc: 'Releases a pressurized stream of magma.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/MagnaScorcher-basicskill2.png', manaCost: 10, damage: 120, cooldown: 3, frames: [] },
+      ultimate: { name: 'Eruption Sting', type: 'Ultimate Skill', desc: 'Injects molten venom in a rapid burst.', icon: '', manaCost: 20, damage: 220, cooldown: 6, frames: [] }
+    }
+  },
+
+  pyro_wraith: {
+    id: 'pyro_wraith', facesRight: false, spriteScale: 1.3,
+    name: 'Pyro Wraith', title: 'Flame Specter',
+    element: 'Fire', role: 'Monster',
+    color: '#ff2200', glowColor: 'rgba(255,34,0,0.6)', bgColor: '#180400',
+    stats: { hp: 590, atk: 120, def: 45, spd: 120, crit: 18 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-idle2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-idle2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-2background.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Phantom Flame', type: 'Basic Skill', desc: 'Hurls spectral fire that phases through defenses.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-basicskill.png', manaCost: 0, damage: 82, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-basicskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-basicskilleffect2.png'
+        ]
+      },
+      special:  { name: 'Soul Scorch',   type: 'Special Skill',  desc: 'Burns the enemy\'s spirit directly.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/PyrothWrath-basicskill2.png', manaCost: 10, damage: 130, cooldown: 3, frames: [] },
+      ultimate: { name: 'Inferno Wraith', type: 'Ultimate Skill', desc: 'Fully ignites into a wraith of pure flame.', icon: '', manaCost: 20, damage: 240, cooldown: 6, frames: [] }
+    }
+  },
+
+  cinder_golem: {
+    id: 'cinder_golem', facesRight: true, spriteScale: 1.4,
+    name: 'Cinder Golem', title: 'Stone & Fire',
+    element: 'Fire', role: 'Monster',
+    color: '#ff7722', glowColor: 'rgba(255,119,34,0.6)', bgColor: '#1a0800',
+    stats: { hp: 750, atk: 105, def: 90, spd: 55, crit: 8 },
+    sprites: {
+      idle:   'StoryEnemies/Fire/Cinder Golem/idle.png',
+      walk:   'StoryEnemies/Fire/Cinder Golem/walk.png',
+      run:    'StoryEnemies/Fire/Cinder Golem/run.png',
+      sprint: 'StoryEnemies/Fire/Cinder Golem/sprint.png',
+      attack: 'StoryEnemies/Fire/Cinder Golem/attack.png',
+      portrait: 'StoryEnemies/Fire/Cinder Golem/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Fire/Cinder Golem/background.png']
+    },
+    skills: {
+      basic:    { name: 'Rock Smash',     type: 'Basic Skill',   desc: 'Slams the ground with burning fists.', icon: '', manaCost: 0,  damage: 100, cooldown: 0, frames: [] },
+      special:  { name: 'Magma Shield',   type: 'Special Skill', desc: 'Hardens body with molten rock, blocking damage.',  icon: '', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Eruption Slam',  type: 'Ultimate Skill',desc: 'Leaps and crashes down with explosive force.',  icon: '', manaCost: 20, damage: 260, cooldown: 6, frames: [] }
+    }
+  },
+
+  magma_serpent: {
+    id: 'magma_serpent', facesRight: false, spriteScale: 1.35,
+    name: 'Magma Serpent', title: 'Living Lava',
+    element: 'Fire', role: 'Monster',
+    color: '#ff3300', glowColor: 'rgba(255,51,0,0.6)', bgColor: '#200800',
+    stats: { hp: 680, atk: 115, def: 65, spd: 110, crit: 15 },
+    sprites: {
+      idle:   'StoryEnemies/Fire/Magma Serpent/idle.png',
+      walk:   'StoryEnemies/Fire/Magma Serpent/walk.png',
+      run:    'StoryEnemies/Fire/Magma Serpent/run.png',
+      sprint: 'StoryEnemies/Fire/Magma Serpent/sprint.png',
+      attack: 'StoryEnemies/Fire/Magma Serpent/attack.png',
+      portrait: 'StoryEnemies/Fire/Magma Serpent/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Fire/Magma Serpent/background.png']
+    },
+    skills: {
+      basic:    { name: 'Lava Fang',    type: 'Basic Skill',   desc: 'Strikes with molten fangs.',      icon: '', manaCost: 0,  damage: 110, cooldown: 0, frames: [] },
+      special:  { name: 'Scorch Coil',  type: 'Special Skill', desc: 'Wraps around and burns the foe.', icon: '', manaCost: 10, damage: 150, cooldown: 3, frames: [] },
+      ultimate: { name: 'Inferno Tide', type: 'Ultimate Skill',desc: 'Releases a torrent of molten fire.',icon: '', manaCost: 20, damage: 280, cooldown: 6, frames: [] }
+    }
+  },
+
+  lirael: {
+    id: 'lirael', facesRight: false, spriteScale: 1.35,
+    name: 'Lirael', title: 'The Phoenix Seraphim',
+    element: 'Fire', role: 'Boss',
+    color: '#ff2200', glowColor: 'rgba(255,34,0,0.9)', bgColor: '#200500',
+    stats: { hp: 1050, atk: 125, def: 82, spd: 95, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle3.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle4.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle5.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-3background.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Phoenix Talon', type: 'Basic Skill', desc: 'Rakes with wings of living fire.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-basicskill.png',
+        manaCost: 0, damage: 82, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-basicskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-basicskilleffect2.png'
+        ]
+      },
+      special: {
+        name: 'Seraph Blaze', type: 'Special Skill', desc: 'Channels celestial fire into a devastating eruption.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-specialskill.png',
+        manaCost: 10, damage: 165, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-specialskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-specialskilleffect_1.png'
+        ]
+      },
+      ultimate: {
+        name: 'Eternal Rebirth', type: 'Ultimate Skill', desc: 'Rises from ash and unleashes the full fury of the undying phoenix.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-ultimateskill.png',
+        manaCost: 20, damage: 310, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-ultimateskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Lirael-ultimateskilleffect_1.png'
+        ]
+      }
+    }
+  },
+
+  inferno_lord: {
+    id: 'inferno_lord', facesRight: true, spriteScale: 1.4,
+    name: 'Inferno Lord', title: 'Chapter 1 Boss',
+    element: 'Fire', role: 'Boss',
+    color: '#ff1100', glowColor: 'rgba(255,17,0,0.8)', bgColor: '#2a0400',
+    stats: { hp: 1200, atk: 135, def: 80, spd: 90, crit: 18 },
+    sprites: {
+      idle:   'StoryEnemies/Fire/Inferno Lord/idle.png',
+      walk:   'StoryEnemies/Fire/Inferno Lord/walk.png',
+      run:    'StoryEnemies/Fire/Inferno Lord/run.png',
+      sprint: 'StoryEnemies/Fire/Inferno Lord/sprint.png',
+      attack: 'StoryEnemies/Fire/Inferno Lord/attack.png',
+      portrait: 'StoryEnemies/Fire/Inferno Lord/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Fire/Inferno Lord/background.png']
+    },
+    skills: {
+      basic:    { name: 'Hellfire Strike',  type: 'Basic Skill',   desc: 'A devastating blow wreathed in hellfire.',   icon: '', manaCost: 0,  damage: 130, cooldown: 0, frames: [] },
+      special:  { name: 'Flame Dominion',   type: 'Special Skill', desc: 'Commands the flames to engulf the enemy.',   icon: '', manaCost: 10, damage: 200, cooldown: 3, frames: [] },
+      ultimate: { name: 'Apocalypse Flame', type: 'Ultimate Skill',desc: 'Unleashes the full wrath of the inferno.',   icon: '', manaCost: 20, damage: 380, cooldown: 6, frames: [] }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 2 — LYRA'S BLIZZARD  (Frost enemies)
+  // ══════════════════════════════════════════════════════════
+  frostling_brawler: {
+    id: 'frostling_brawler', facesRight: false, spriteScale: 1.25,
+    name: 'Frostling Brawler', title: 'Ice Brute',
+    element: 'Ice', role: 'Monster',
+    color: '#88ddff', glowColor: 'rgba(136,221,255,0.6)', bgColor: '#000d18',
+    stats: { hp: 500, atk: 80, def: 55, spd: 75, crit: 10 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-idle.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-battlefield_image.jpg']
+    },
+    skills: {
+      basic: {
+        name: 'Frost Punch', type: 'Basic Skill', desc: 'Slams with ice-hardened fists.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskill.png',
+        manaCost: 0, damage: 80, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskilleffect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskill2.png'
+        ]
+      },
+      special:  { name: 'Ice Slam',     type: 'Special Skill',  desc: 'Leaps and crashes down with frozen force.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskill3.png', manaCost: 10, damage: 120, cooldown: 3, frames: [] },
+      ultimate: { name: 'Glacial Rage', type: 'Ultimate Skill', desc: 'Enters a berserk state coated in ice shards.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-basicskill4.png', manaCost: 20, damage: 230, cooldown: 6, frames: [] }
+    }
+  },
+
+  glacier_golem: {
+    id: 'glacier_golem', facesRight: false, spriteScale: 1.4,
+    name: 'Glacier Golem', title: 'Living Ice',
+    element: 'Ice', role: 'Monster',
+    color: '#55bbee', glowColor: 'rgba(85,187,238,0.6)', bgColor: '#00081a',
+    stats: { hp: 720, atk: 95, def: 110, spd: 45, crit: 8 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-idle.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-battlefield.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Ice Crush', type: 'Basic Skill', desc: 'Smashes with a massive frozen fist.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-basicskill.png',
+        manaCost: 0, damage: 95, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-effect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-effect2.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-effect3.png'
+        ]
+      },
+      special:  { name: 'Frozen Wall',    type: 'Special Skill',  desc: 'Raises a wall of ice to block and retaliate.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-basicskill2.png', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Avalanche Slam', type: 'Ultimate Skill', desc: 'Brings down a mountain of glacial ice.',        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-basicskill4.png', manaCost: 20, damage: 260, cooldown: 6, frames: [] }
+    }
+  },
+
+  chillwind_sprite: {
+    id: 'chillwind_sprite', facesRight: false, spriteScale: 1.5,
+    name: 'Chill-Wind Sprite', title: 'Frost Wisp',
+    element: 'Ice', role: 'Monster',
+    color: '#aaeeff', glowColor: 'rgba(170,238,255,0.6)', bgColor: '#00060f',
+    stats: { hp: 460, atk: 105, def: 40, spd: 130, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-idle2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-idle3.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-idle4.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Frostling-battlefield_image.jpg']
+    },
+    skills: {
+      basic: {
+        name: 'Frost Bolt', type: 'Basic Skill', desc: 'Fires a piercing shard of ice.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-basicskill.png',
+        manaCost: 0, damage: 100, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-effect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-effect2.png'
+        ]
+      },
+      special:  { name: 'Blizzard Volley', type: 'Special Skill',  desc: 'Unleashes a flurry of ice projectiles.',     icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-basicskill2.png', manaCost: 10, damage: 145, cooldown: 3, frames: [] },
+      ultimate: { name: 'Arctic Storm',    type: 'Ultimate Skill', desc: 'Summons a raging blizzard on the enemy.',    icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Chill-Wind-basicskill3.png', manaCost: 20, damage: 260, cooldown: 6, frames: [] }
+    }
+  },
+
+  frostbite_phantom: {
+    id: 'frostbite_phantom', facesRight: false, spriteScale: 1.3,
+    name: 'Frostbite Phantom', title: 'Elite Frost Specter',
+    element: 'Ice', role: 'Monster',
+    color: '#66ccff', glowColor: 'rgba(102,204,255,0.7)', bgColor: '#000a14',
+    stats: { hp: 680, atk: 100, def: 65, spd: 115, crit: 8 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-idle2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-idle3.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-idle4.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Glacier-Golem-battlefield.webp']
+    },
+    skills: {
+      basic: {
+        name: 'Phantom Chill', type: 'Basic Skill', desc: 'Phases through and strikes with frozen claws.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-basicskill.png',
+        manaCost: 0, damage: 115, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-effect.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-effect2.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-effect3.png'
+        ]
+      },
+      special:  { name: 'Frostbite',      type: 'Special Skill',  desc: 'Inflicts deep freeze on contact.',            icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-basicskill2.png', manaCost: 10, damage: 130, cooldown: 3, frames: [] },
+      ultimate: { name: 'Soul Freeze',    type: 'Ultimate Skill', desc: 'Locks the enemy in a cocoon of absolute cold.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Frostbit-basicskill3.png', manaCost: 20, damage: 210, cooldown: 6, frames: [] }
+    }
+  },
+
+  kaelen: {
+    id: 'kaelen', facesRight: false, spriteScale: 1.4,
+    name: 'Kaelen', title: 'The Corrupted Frostlord',
+    element: 'Ice', role: 'Boss',
+    color: '#00cfff', glowColor: 'rgba(0,207,255,0.9)', bgColor: '#000d1a',
+    stats: { hp: 1050, atk: 125, def: 90, spd: 100, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/kaelen_frostlord_idle_1.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/kaelen_frostlord_idle_2.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/kaelen_frostlord_idle_3.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/kaelen_frostlord_idle_2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Kaelen-basicattack.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/kaelen_frostlord_idle_1.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/battlefield_final.jpg']
+    },
+    skills: {
+      basic: {
+        name: 'Glacial Cleave', type: 'Basic Skill', desc: 'Slashes with a blade of corrupted ice.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Kaelen-basicattack.png',
+        manaCost: 0, damage: 82, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/effect_glacial_cleave_frame_1.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/effect_glacial_cleave_frame_2.png'
+        ]
+      },
+      special: {
+        name: 'Clash of Ice', type: 'Special Skill', desc: 'Opens a vortex of frozen energy that erupts in ice shards.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/specialskill.png',
+        manaCost: 10, damage: 165, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/clashofice_frame_01_energy_prelude_transparent.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/clashofice_frame_02_vortex_open_transparent.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/clashofice_frame_03_ice_star_ring_transparent.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/clashofice_frame_04_ice_shard_burst_transparent.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/clashofice_frame_05_frost_mist_fade_transparent.png'
+        ]
+      },
+      ultimate: {
+        name: 'Frostlord\'s Wrath', type: 'Ultimate Skill', desc: 'Erupts glaciers from the ground in a cataclysmic ice explosion.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Kaelen-ultimateskill.png',
+        manaCost: 20, damage: 310, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/ice_sprite_crack_ground_01.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/ice_sprite_small_pillar_02.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/ice_sprite_eruption_cluster_03.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/ice_sprite_large_wall_04.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/ice_sprite_mist_smoke_06.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 3 — KAEL'S STORM  (Storm / Lightning enemies)
+  // ══════════════════════════════════════════════════════════
+  storm_goblin: {
+    id: 'storm_goblin', facesRight: false, spriteScale: 1.2,
+    name: 'Storm Goblin', title: 'Thunder Pest',
+    element: 'Lightning', role: 'Monster',
+    color: '#ffee00', glowColor: 'rgba(255,238,0,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 480, atk: 88, def: 40, spd: 110, crit: 13 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_idle4.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Spark Slash', type: 'Basic Skill', desc: 'Slashes with a crackling bolt of lightning.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_basicskill.png',
+        manaCost: 0, damage: 85, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_effectskill.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_effectskill2.png'
+        ]
+      },
+      special:  { name: 'Volt Lunge',    type: 'Special Skill',  desc: 'Charges at enemy in a burst of electricity.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_basicskill2.png', manaCost: 10, damage: 125, cooldown: 3, frames: [] },
+      ultimate: { name: 'Thunder Frenzy', type: 'Ultimate Skill', desc: 'Goes berserk, striking repeatedly with lightning.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Storm-Goblin-Copy_of_basicskill3.png', manaCost: 20, damage: 235, cooldown: 6, frames: [] }
+    }
+  },
+
+  thunder_brute: {
+    id: 'thunder_brute', facesRight: false, spriteScale: 1.4,
+    name: 'Thunder Brute', title: 'Storm Colossus',
+    element: 'Lightning', role: 'Monster',
+    color: '#ffdd00', glowColor: 'rgba(255,221,0,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 680, atk: 112, def: 75, spd: 65, crit: 11 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-idle4.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-Thunder-Brute-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Thunderclap Fist', type: 'Basic Skill', desc: 'Delivers a crushing blow that echoes like thunder.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-Thunder-Brute-basicskill.png',
+        manaCost: 0, damage: 108, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-effectskill.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-effectskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-effectskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-effectskill4.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-effectskill5.png'
+        ]
+      },
+      special:  { name: 'Storm Slam',    type: 'Special Skill',  desc: 'Leaps and crashes down with electric force.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-basicskill2.png', manaCost: 10, damage: 155, cooldown: 3, frames: [] },
+      ultimate: { name: 'Tempest Roar',  type: 'Ultimate Skill', desc: 'Lets out a roar that summons a torrent of lightning.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Thunder-Brute-basicskill3.png', manaCost: 20, damage: 275, cooldown: 6, frames: [] }
+    }
+  },
+
+  tempest_archer: {
+    id: 'tempest_archer', facesRight: false, spriteScale: 1.5,
+    name: 'Tempest Archer', title: 'Storm Marksman',
+    element: 'Lightning', role: 'Monster',
+    color: '#aaee00', glowColor: 'rgba(170,238,0,0.6)', bgColor: '#080d00',
+    stats: { hp: 540, atk: 118, def: 50, spd: 120, crit: 17 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-idle4.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Bolt Arrow', type: 'Basic Skill', desc: 'Fires an arrow charged with storm energy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-basicskill.png',
+        manaCost: 0, damage: 112, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-effectskill.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-effectskill2.png'
+        ]
+      },
+      special:  { name: 'Chain Lightning', type: 'Special Skill',  desc: 'Releases a volley that chains between targets.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-basicskill2.png', manaCost: 10, damage: 158, cooldown: 3, frames: [] },
+      ultimate: { name: 'Storm Barrage',   type: 'Ultimate Skill', desc: 'Unleashes a rain of electrified arrows.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Tempest-Archer-basicskill3.png', manaCost: 20, damage: 280, cooldown: 6, frames: [] }
+    }
+  },
+
+  sky_reaper: {
+    id: 'sky_reaper', facesRight: false, spriteScale: 1.35,
+    name: 'Sky Reaper', title: 'Elite Storm Hunter',
+    element: 'Lightning', role: 'Monster',
+    color: '#ccdd00', glowColor: 'rgba(204,221,0,0.7)', bgColor: '#0a0d00',
+    stats: { hp: 700, atk: 125, def: 68, spd: 115, crit: 20 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-idle4.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Sky Slash', type: 'Basic Skill', desc: 'Dives from above with an electrified blade.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-basicskill.png',
+        manaCost: 0, damage: 120, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-skilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-skilleffect2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-skilleffect3.png'
+        ]
+      },
+      special:  { name: 'Reaping Gale',  type: 'Special Skill',  desc: 'Sweeps through in a lightning-infused arc.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-basicskill2.png', manaCost: 10, damage: 170, cooldown: 3, frames: [] },
+      ultimate: { name: 'Death Descent', type: 'Ultimate Skill', desc: 'Plunges from the stratosphere at lethal speed.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Reaper-basicskill3.png', manaCost: 20, damage: 305, cooldown: 6, frames: [] }
+    }
+  },
+
+  zephyron: {
+    id: 'zephyron', facesRight: false, spriteScale: 1.4,
+    name: 'Zephyron', title: 'The Tempest King',
+    element: 'Lightning', role: 'Boss',
+    color: '#ffee00', glowColor: 'rgba(255,238,0,0.9)', bgColor: '#111100',
+    stats: { hp: 1000, atk: 135, def: 75, spd: 105, crit: 17 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-idle4.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Tempest Strike', type: 'Basic Skill', desc: 'Smashes with a condensed bolt of pure storm energy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskill.png',
+        manaCost: 0, damage: 92, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskill4.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-basicskilleffect.png'
+        ]
+      },
+      special: {
+        name: 'Storm Sovereign', type: 'Special Skill', desc: 'Calls down five consecutive thunderbolts.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialskill.png',
+        manaCost: 10, damage: 175, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialskill4.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialskill5.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-specialkilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'King\'s Wrath', type: 'Ultimate Skill', desc: 'Unleashes the full fury of the tempest in one devastating blast.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskill.png',
+        manaCost: 20, damage: 325, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskill4.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRON-ultimateskilleffect2.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 4 — RIVEN'S FORTRESS  (Earth / Wind enemies)
+  // ══════════════════════════════════════════════════════════
+  dust_golem: {
+    id: 'dust_golem', facesRight: false, spriteScale: 1.4,
+    name: 'Dust Golem', title: 'Earth Brute',
+    element: 'Earth', role: 'Monster',
+    color: '#cc9944', glowColor: 'rgba(204,153,68,0.6)', bgColor: '#100a00',
+    stats: { hp: 620, atk: 92, def: 100, spd: 50, crit: 9 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-sprinttoattack.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-sprinttoattack2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-sprinttoattack3.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Rock Smash', type: 'Basic Skill', desc: 'Slams with a boulder-heavy fist.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-basicskill.png',
+        manaCost: 0, damage: 92, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-basicskilleffect.png',
+                 'https://res.cloudinary.com/wvobx3st/image/upload/Dust-Golem-sprinttoattackeffect.png']
+      },
+      special:  { name: 'Quake Stomp',   type: 'Special Skill',  desc: 'Stomps the ground, sending shockwaves outward.', icon: '', manaCost: 10, damage: 140, cooldown: 3, frames: [] },
+      ultimate: { name: 'Dust Storm',    type: 'Ultimate Skill', desc: 'Explodes into a blinding storm of rock and dust.',  icon: '', manaCost: 20, damage: 255, cooldown: 6, frames: [] }
+    }
+  },
+
+  gale_harrier: {
+    id: 'gale_harrier', facesRight: false, spriteScale: 1.3,
+    name: 'Gale Harrier', title: 'Wind Predator',
+    element: 'Earth', role: 'Monster',
+    color: '#aacc66', glowColor: 'rgba(170,204,102,0.6)', bgColor: '#080d00',
+    stats: { hp: 540, atk: 105, def: 55, spd: 115, crit: 14 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-sprinttoattack.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-sprinttoattack2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-sprinttoattack3.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Wind Rake', type: 'Basic Skill', desc: 'Swoops in and rakes with gale-force talons.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Harrier-basicskill2.png',
+        manaCost: 0, damage: 100, cooldown: 0,
+        frames: []
+      },
+      special:  { name: 'Dive Slash',   type: 'Special Skill',  desc: 'Plunges from height with slicing wings.', icon: '', manaCost: 10, damage: 148, cooldown: 3, frames: [] },
+      ultimate: { name: 'Gale Assault', type: 'Ultimate Skill', desc: 'Repeatedly strikes in a blur of wind.',    icon: '', manaCost: 20, damage: 268, cooldown: 6, frames: [] }
+    }
+  },
+
+  sky_rift_falcon: {
+    id: 'sky_rift_falcon', facesRight: false, spriteScale: 1.5,
+    name: 'Sky-Rift Falcon', title: 'Storm Raptor',
+    element: 'Earth', role: 'Monster',
+    color: '#88bb44', glowColor: 'rgba(136,187,68,0.6)', bgColor: '#060d00',
+    stats: { hp: 610, atk: 118, def: 62, spd: 125, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-basicattack.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-basicattack2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-basicattack.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-battlefield.jpg']
+    },
+    skills: {
+      basic: {
+        name: 'Rift Talon', type: 'Basic Skill', desc: 'Tears through with razor-sharp sky-attuned claws.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-basicattack.png',
+        manaCost: 0, damage: 112, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Sky-Rift-Falcon-basicattackeffect.png']
+      },
+      special:  { name: 'Sky Rift',     type: 'Special Skill',  desc: 'Tears a rift in the air that blasts the enemy.', icon: '', manaCost: 10, damage: 162, cooldown: 3, frames: [] },
+      ultimate: { name: 'Storm Rend',   type: 'Ultimate Skill', desc: 'Shreds through enemy defenses in a sonic dive.',   icon: '', manaCost: 20, damage: 285, cooldown: 6, frames: [] }
+    }
+  },
+
+  zephyr_sentinel: {
+    id: 'zephyr_sentinel', facesRight: false, spriteScale: 1.35,
+    name: 'Zephyr Sentinel', title: 'Wind Guardian',
+    element: 'Earth', role: 'Monster',
+    color: '#99cc55', glowColor: 'rgba(153,204,85,0.7)', bgColor: '#070d00',
+    stats: { hp: 720, atk: 122, def: 88, spd: 90, crit: 15 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Sentinel Gale', type: 'Basic Skill', desc: 'Strikes with disciplined wind-enhanced force.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskill.png',
+        manaCost: 0, damage: 118, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskilleffect.png']
+      },
+      special:  { name: 'Wind Barrier',  type: 'Special Skill',  desc: 'Creates a barrier of wind that deflects attacks.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Sentinel-basicskill3.png', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Tempest Guard', type: 'Ultimate Skill', desc: 'Unleashes a wind maelstrom as a last resort.',      icon: '', manaCost: 20, damage: 300, cooldown: 6, frames: [] }
+    }
+  },
+
+  zephyrus: {
+    id: 'zephyrus', facesRight: false, spriteScale: 1.4,
+    name: 'Zephyrus', title: 'The Tempest Sovereign',
+    element: 'Earth', role: 'Boss',
+    color: '#77cc33', glowColor: 'rgba(119,204,51,0.9)', bgColor: '#060e00',
+    stats: { hp: 1050, atk: 115, def: 100, spd: 65, crit: 11 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-idle.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-idle.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Sovereign Strike', type: 'Basic Skill', desc: 'Delivers a blow that shakes the earth and sky.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-basicskill.png',
+        manaCost: 0, damage: 102, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-basicskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-basicskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-basicskill3.png'
+        ]
+      },
+      special: {
+        name: 'Tempest Command', type: 'Special Skill', desc: 'Summons a vortex of wind and earth to engulf the enemy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-specialskill.png',
+        manaCost: 10, damage: 155, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-specialskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-specialskilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'Sovereign\'s Wrath', type: 'Ultimate Skill', desc: 'Calls forth the full might of wind and earth in one cataclysmic strike.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-ultimateskill.png',
+        manaCost: 20, damage: 360, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-ultimateskill_1.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/ZEPHYRUS-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 5 — SELENE'S MOON HUNT  (Moon / Light enemies)
+  // ══════════════════════════════════════════════════════════
+  glint_sprite: {
+    id: 'glint_sprite', facesRight: false, spriteScale: 1.2,
+    name: 'Glint Sprite', title: 'Moonlight Wisp',
+    element: 'Light', role: 'Monster',
+    color: '#eeddff', glowColor: 'rgba(238,221,255,0.6)', bgColor: '#08001a',
+    stats: { hp: 460, atk: 85, def: 38, spd: 125, crit: 15 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Moonbeam', type: 'Basic Skill', desc: 'Fires a concentrated beam of moonlight.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-basicskill.png',
+        manaCost: 0, damage: 82, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-basicskilleffect.png']
+      },
+      special:  { name: 'Lunar Flash',   type: 'Special Skill',  desc: 'Blinds and strikes with a burst of moonlight.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-basicskill2.png', manaCost: 10, damage: 122, cooldown: 3, frames: [] },
+      ultimate: { name: 'Starfall Bolt', type: 'Ultimate Skill', desc: 'Calls down a barrage of falling starlight.',      icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Glint-Sprite-basicskill3.png', manaCost: 20, damage: 235, cooldown: 6, frames: [] }
+    }
+  },
+
+  moonlit_stalker: {
+    id: 'moonlit_stalker', facesRight: false, spriteScale: 1.3,
+    name: 'Moonlit Stalker', title: 'Night Predator',
+    element: 'Light', role: 'Monster',
+    color: '#cc99ff', glowColor: 'rgba(204,153,255,0.6)', bgColor: '#080015',
+    stats: { hp: 580, atk: 108, def: 58, spd: 118, crit: 18 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-idle3.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Shadow Pounce', type: 'Basic Skill', desc: 'Leaps from darkness and strikes under moonlight.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskill.png',
+        manaCost: 0, damage: 105, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskilleffect2.png'
+        ]
+      },
+      special:  { name: 'Lunar Lunge',   type: 'Special Skill',  desc: 'Dashes at blinding speed under the moon\'s blessing.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskill2.png', manaCost: 10, damage: 152, cooldown: 3, frames: [] },
+      ultimate: { name: 'Midnight Hunt', type: 'Ultimate Skill', desc: 'Unleashes a flurry of moonlit strikes.',                 icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Moonlit-Stalker-basicskill3.png', manaCost: 20, damage: 272, cooldown: 6, frames: [] }
+    }
+  },
+
+  lunar_warden: {
+    id: 'lunar_warden', facesRight: false, spriteScale: 1.4,
+    name: 'Lunar Warden', title: 'Moon Guardian',
+    element: 'Light', role: 'Monster',
+    color: '#bbaaff', glowColor: 'rgba(187,170,255,0.6)', bgColor: '#06001a',
+    stats: { hp: 680, atk: 112, def: 85, spd: 88, crit: 14 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-idle3.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-idle3.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Moon Slash', type: 'Basic Skill', desc: 'Strikes with a crescent blade of lunar energy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskill.png',
+        manaCost: 0, damage: 108, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskilleffect2.png'
+        ]
+      },
+      special:  { name: 'Warden\'s Light', type: 'Special Skill',  desc: 'Calls forth a pillar of moonlight to smite the foe.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskill2.png', manaCost: 10, damage: 158, cooldown: 3, frames: [] },
+      ultimate: { name: 'Full Moon Fury',  type: 'Ultimate Skill', desc: 'Draws power from the full moon for a devastating blow.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Lunar-Warden-basicskill3.png', manaCost: 20, damage: 285, cooldown: 6, frames: [] }
+    }
+  },
+
+  eclipse_phantom: {
+    id: 'eclipse_phantom', facesRight: false, spriteScale: 1.35,
+    name: 'Eclipse Phantom', title: 'Dark Moon Elite',
+    element: 'Light', role: 'Monster',
+    color: '#9966cc', glowColor: 'rgba(153,102,204,0.7)', bgColor: '#050010',
+    stats: { hp: 710, atk: 128, def: 70, spd: 112, crit: 20 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-Moon_Battlefield_Concept_5.png']
+    },
+    skills: {
+      basic: {
+        name: 'Eclipse Strike', type: 'Basic Skill', desc: 'Strikes from within the shadow of an eclipse.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill.png',
+        manaCost: 0, damage: 124, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskilleffect2.png'
+        ]
+      },
+      special:  { name: 'Void Eclipse',    type: 'Special Skill',  desc: 'Blots out the light and strikes from all directions.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill2.png', manaCost: 10, damage: 175, cooldown: 3, frames: [] },
+      ultimate: { name: 'Dark Totality',   type: 'Ultimate Skill', desc: 'Plunges the battlefield into total eclipse, dealing massive damage.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Eclipse-Phantom-basicskill3.png', manaCost: 20, damage: 308, cooldown: 6, frames: [] }
+    }
+  },
+
+  lumina: {
+    id: 'lumina', facesRight: false, spriteScale: 1.4,
+    name: 'Lumina', title: 'The Eclipse Empress',
+    element: 'Light', role: 'Boss',
+    color: '#ddaaff', glowColor: 'rgba(221,170,255,0.9)', bgColor: '#080015',
+    stats: { hp: 950, atk: 145, def: 62, spd: 112, crit: 26 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-idle.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-idle.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Empress Strike', type: 'Basic Skill', desc: 'Channels moonlight and eclipse energy into a single blow.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-basicskill.png',
+        manaCost: 0, damage: 97, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-basicskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-basicskilleffect.png'
+        ]
+      },
+      special: {
+        name: 'Lunar Dominion', type: 'Special Skill', desc: 'Commands the moon to rain down crescent blades.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-specialskill.png',
+        manaCost: 10, damage: 195, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-specialskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-specialskilleffect.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-specialskilleffect2.png'
+        ]
+      },
+      ultimate: {
+        name: 'Eclipse Annihilation', type: 'Ultimate Skill', desc: 'Merges moon and shadow into a world-ending eclipse burst.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-ultimateskill.png',
+        manaCost: 20, damage: 340, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-ultimateskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-ultimateskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LUMINA-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 6 — DRAVEN'S SHADOW  (Shadow / Dark enemies)
+  // ══════════════════════════════════════════════════════════
+  gloom_bat: {
+    id: 'gloom_bat', facesRight: false, spriteScale: 1.2,
+    name: 'Gloom Bat', title: 'Shadow Flyer',
+    element: 'Dark', role: 'Monster',
+    color: '#8800cc', glowColor: 'rgba(136,0,204,0.6)', bgColor: '#050010',
+    stats: { hp: 450, atk: 88, def: 35, spd: 130, crit: 17 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Dark Screech', type: 'Basic Skill', desc: 'Emits a shadow-infused screech that disorients.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-basicskill.png',
+        manaCost: 0, damage: 85, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-basicskilleffect.png']
+      },
+      special:  { name: 'Shadow Dive',   type: 'Special Skill',  desc: 'Dives from darkness at terrifying speed.',      icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Gloom-Bat-basicskill2.png', manaCost: 10, damage: 128, cooldown: 3, frames: [] },
+      ultimate: { name: 'Gloom Swarm',   type: 'Ultimate Skill', desc: 'Summons a swarm of shadow bats to overwhelm.',   icon: '', manaCost: 20, damage: 242, cooldown: 6, frames: [] }
+    }
+  },
+
+  shadow_prowler: {
+    id: 'shadow_prowler', facesRight: false, spriteScale: 1.3,
+    name: 'Shadow Prowler', title: 'Darkness Hunter',
+    element: 'Dark', role: 'Monster',
+    color: '#6600aa', glowColor: 'rgba(102,0,170,0.6)', bgColor: '#050010',
+    stats: { hp: 580, atk: 112, def: 58, spd: 122, crit: 20 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Prowl Strike', type: 'Basic Skill', desc: 'Attacks from the shadows with pinpoint precision.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-basicskill.png',
+        manaCost: 0, damage: 108, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-basicskilleffect.png']
+      },
+      special:  { name: 'Umbra Rush',    type: 'Special Skill',  desc: 'Teleports behind enemy and strikes.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-basicskill2.png', manaCost: 10, damage: 158, cooldown: 3, frames: [] },
+      ultimate: { name: 'Shadow Storm',  type: 'Ultimate Skill', desc: 'Becomes a shadow storm that attacks from every angle.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Shadow-Prowler-basicskill3.png', manaCost: 20, damage: 278, cooldown: 6, frames: [] }
+    }
+  },
+
+  draven_abyssal_guard: {
+    id: 'draven_abyssal_guard', facesRight: false, spriteScale: 1.3,
+    name: 'Abyssal Guard', title: 'Shadow Sentinel',
+    element: 'Dark', role: 'Monster',
+    color: '#440088', glowColor: 'rgba(68,0,136,0.6)', bgColor: '#040010',
+    stats: { hp: 750, atk: 118, def: 95, spd: 78, crit: 14 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Abyss Cleave', type: 'Basic Skill', desc: 'Slashes with a blade forged in the void.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill.png',
+        manaCost: 0, damage: 115, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskilleffect.png']
+      },
+      special:  { name: 'Void Shield',   type: 'Special Skill',  desc: 'Raises a void barrier that halves incoming damage.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill2.png', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Dark Judgment', type: 'Ultimate Skill', desc: 'Calls down the wrath of the abyss.',                  icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill3.png', manaCost: 20, damage: 295, cooldown: 6, frames: [] }
+    }
+  },
+
+  nightmare_assassin: {
+    id: 'nightmare_assassin', facesRight: false, spriteScale: 1.3,
+    name: 'Nightmare Assassin', title: 'Shadow Elite',
+    element: 'Dark', role: 'Monster',
+    color: '#7700bb', glowColor: 'rgba(119,0,187,0.7)', bgColor: '#050010',
+    stats: { hp: 680, atk: 135, def: 62, spd: 128, crit: 24 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Nightmare Stab', type: 'Basic Skill', desc: 'Materializes from a nightmare and strikes the heart.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskill.png',
+        manaCost: 0, damage: 130, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskilleffect.png']
+      },
+      special:  { name: 'Dream Shatter', type: 'Special Skill',  desc: 'Tears through the enemy\'s mind and body.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Nightmare-Assasin-basicskill2.png', manaCost: 10, damage: 182, cooldown: 3, frames: [] },
+      ultimate: { name: 'Eternal Nightmare', type: 'Ultimate Skill', desc: 'Traps the enemy in an unending nightmare.', icon: '', manaCost: 20, damage: 318, cooldown: 6, frames: [] }
+    }
+  },
+
+  malakor: {
+    id: 'malakor', facesRight: false, spriteScale: 1.4,
+    name: 'Malakor', title: 'The Void Lord',
+    element: 'Dark', role: 'Boss',
+    color: '#aa00ff', glowColor: 'rgba(170,0,255,0.9)', bgColor: '#060012',
+    stats: { hp: 900, atk: 165, def: 72, spd: 133, crit: 29 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Void Crush', type: 'Basic Skill', desc: 'Compresses void energy into a crushing blow.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-basicskill.png',
+        manaCost: 0, damage: 107, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-basicskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-basicskill3.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-basicskilleffect.png'
+        ]
+      },
+      special: {
+        name: 'Void Dominion', type: 'Special Skill', desc: 'Commands the void to consume everything in its path.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-specialskill.png',
+        manaCost: 10, damage: 205, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-specialskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-specialskilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'Lord\'s Oblivion', type: 'Ultimate Skill', desc: 'Opens a rift to the void that devours all light and hope.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-ultimateskill.png',
+        manaCost: 20, damage: 370, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-ultimateskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/MALAKOR-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 7 — MIRA'S DEEP  (Water enemies)
+  // ══════════════════════════════════════════════════════════
+  tide_elemental: {
+    id: 'tide_elemental', facesRight: false, spriteScale: 1.3,
+    name: 'Tide Elemental', title: 'Living Water',
+    element: 'Water', role: 'Monster',
+    color: '#0088ff', glowColor: 'rgba(0,136,255,0.6)', bgColor: '#000818',
+    stats: { hp: 580, atk: 95, def: 65, spd: 90, crit: 12 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Tidal Slam', type: 'Basic Skill', desc: 'Crashes into the enemy like a breaking wave.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskill.png',
+        manaCost: 0, damage: 92, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskilleffect.png']
+      },
+      special:  { name: 'Surge Rush',    type: 'Special Skill',  desc: 'Surges forward in a torrent of water.',        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Tide-Elemental-basicskill2.png', manaCost: 10, damage: 138, cooldown: 3, frames: [] },
+      ultimate: { name: 'Tidal Fury',    type: 'Ultimate Skill', desc: 'Transforms into a massive wave of destruction.',  icon: '', manaCost: 20, damage: 252, cooldown: 6, frames: [] }
+    }
+  },
+
+  coral_scuttler: {
+    id: 'coral_scuttler', facesRight: false, spriteScale: 1.3,
+    name: 'Coral Scuttler', title: 'Deep Crawler',
+    element: 'Water', role: 'Monster',
+    color: '#0066cc', glowColor: 'rgba(0,102,204,0.6)', bgColor: '#000a1a',
+    stats: { hp: 620, atk: 105, def: 78, spd: 75, crit: 11 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Coral Snap', type: 'Basic Skill', desc: 'Snaps with reinforced coral claws.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-basicskill.png',
+        manaCost: 0, damage: 100, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Coral-Scuttler-basicskilleffect.png']
+      },
+      special:  { name: 'Reef Crush',    type: 'Special Skill',  desc: 'Smashes with the full weight of the reef.',  icon: '', manaCost: 10, damage: 148, cooldown: 3, frames: [] },
+      ultimate: { name: 'Coral Storm',   type: 'Ultimate Skill', desc: 'Launches a barrage of razor-sharp coral.',    icon: '', manaCost: 20, damage: 265, cooldown: 6, frames: [] }
+    }
+  },
+
+  mira_abyssal_guard: {
+    id: 'mira_abyssal_guard', facesRight: false, spriteScale: 1.3,
+    name: 'Abyssal Guard', title: 'Deep Warden',
+    element: 'Water', role: 'Monster',
+    color: '#0044aa', glowColor: 'rgba(0,68,170,0.6)', bgColor: '#000612',
+    stats: { hp: 740, atk: 118, def: 92, spd: 72, crit: 13 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-Battlefield_Concept_2.png']
+    },
+    skills: {
+      basic: {
+        name: 'Deep Slash', type: 'Basic Skill', desc: 'Strikes with abyssal pressure behind every blow.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill.png',
+        manaCost: 0, damage: 115, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskilleffect.png']
+      },
+      special:  { name: 'Abyss Tide',    type: 'Special Skill',  desc: 'Calls forth a wave from the deepest ocean.',  icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Abyssal-Guard-basicskill2.png', manaCost: 10, damage: 165, cooldown: 3, frames: [] },
+      ultimate: { name: 'Crushing Depth', type: 'Ultimate Skill', desc: 'Applies the full pressure of the abyss.',    icon: '', manaCost: 20, damage: 295, cooldown: 6, frames: [] }
+    }
+  },
+
+  deep_sea_siren: {
+    id: 'deep_sea_siren', facesRight: false, spriteScale: 1.3,
+    name: 'Deep-Sea Siren', title: 'Ocean Elite',
+    element: 'Water', role: 'Monster',
+    color: '#0055dd', glowColor: 'rgba(0,85,221,0.7)', bgColor: '#000814',
+    stats: { hp: 700, atk: 132, def: 68, spd: 108, crit: 19 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-idle2.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-idle2.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-idle2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Siren Song', type: 'Basic Skill', desc: 'Strikes with hypnotic aquatic energy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-basicskill.png',
+        manaCost: 0, damage: 128, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Deep-Sea-Siren-basicskilleffect.png']
+      },
+      special:  { name: 'Abyssal Lure',  type: 'Special Skill',  desc: 'Pulls enemy into a whirlpool of dark water.', icon: '', manaCost: 10, damage: 180, cooldown: 3, frames: [] },
+      ultimate: { name: 'Ocean\'s Wail', type: 'Ultimate Skill', desc: 'Unleashes a devastating sonic wave from the deep.', icon: '', manaCost: 20, damage: 315, cooldown: 6, frames: [] }
+    }
+  },
+
+  leviathan: {
+    id: 'leviathan', facesRight: false, spriteScale: 1.4,
+    name: 'Leviathan', title: 'The Ocean Abyss',
+    element: 'Water', role: 'Boss',
+    color: '#0033bb', glowColor: 'rgba(0,51,187,0.9)', bgColor: '#000510',
+    stats: { hp: 970, atk: 135, def: 87, spd: 97, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-idle.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-idle.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Titan Crush', type: 'Basic Skill', desc: 'Crushes with the weight of the entire ocean.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-basicskill.png',
+        manaCost: 0, damage: 87, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-basicskilleffect.png']
+      },
+      special: {
+        name: 'Ocean Surge', type: 'Special Skill', desc: 'Summons a catastrophic tidal surge.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-specialskill.png',
+        manaCost: 10, damage: 160, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-specialskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-specialskilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'Abyss Awakening', type: 'Ultimate Skill', desc: 'The full wrath of the ocean abyss is unleashed.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-ultimateskill.png',
+        manaCost: 20, damage: 320, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-ultimateskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/LEVIATHAN-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 8 — ORION'S TEMPEST  (Wind enemies)
+  // ══════════════════════════════════════════════════════════
+  gale_wisplet: {
+    id: 'gale_wisplet', facesRight: false, spriteScale: 1.3,
+    name: 'Gale Wisplet', title: 'Wind Wisp',
+    element: 'Wind', role: 'Monster',
+    color: '#aaffcc', glowColor: 'rgba(170,255,204,0.6)', bgColor: '#001408',
+    stats: { hp: 460, atk: 88, def: 38, spd: 135, crit: 15 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskill2.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Gust Strike', type: 'Basic Skill', desc: 'Strikes with a concentrated burst of wind.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskill.png',
+        manaCost: 0, damage: 85, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskilleffect.png']
+      },
+      special:  { name: 'Cyclone Dash',  type: 'Special Skill',  desc: 'Spins into a cyclone and rams the enemy.',    icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Gale-Wisplet-basicskill2.png', manaCost: 10, damage: 128, cooldown: 3, frames: [] },
+      ultimate: { name: 'Wind Torrent',  type: 'Ultimate Skill', desc: 'Releases a torrent of cutting wind blades.',   icon: '', manaCost: 20, damage: 242, cooldown: 6, frames: [] }
+    }
+  },
+
+  zephyr_stalker: {
+    id: 'zephyr_stalker', facesRight: false, spriteScale: 1.3,
+    name: 'Zephyr Stalker', title: 'Wind Hunter',
+    element: 'Wind', role: 'Monster',
+    color: '#88ffaa', glowColor: 'rgba(136,255,170,0.6)', bgColor: '#001208',
+    stats: { hp: 580, atk: 108, def: 58, spd: 125, crit: 17 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-s.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-ad.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-sdas.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Wind Claw', type: 'Basic Skill', desc: 'Rakes with wind-enhanced claws.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-basicskill.png',
+        manaCost: 0, damage: 105, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-basicskilleffect.png']
+      },
+      special:  { name: 'Zephyr Pounce', type: 'Special Skill',  desc: 'Leaps with wind-boosted speed for a critical strike.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Zephyr-Stalker-basicskill2.png', manaCost: 10, damage: 155, cooldown: 3, frames: [] },
+      ultimate: { name: 'Gale Rampage',  type: 'Ultimate Skill', desc: 'Goes berserk in a storm of slashing wind.',              icon: '', manaCost: 20, damage: 272, cooldown: 6, frames: [] }
+    }
+  },
+
+  skyward_guard: {
+    id: 'skyward_guard', facesRight: false, spriteScale: 1.3,
+    name: 'Skyward Guard', title: 'Wind Sentinel',
+    element: 'Wind', role: 'Monster',
+    color: '#66ffbb', glowColor: 'rgba(102,255,187,0.6)', bgColor: '#000f06',
+    stats: { hp: 720, atk: 118, def: 90, spd: 88, crit: 14 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-sd.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-sd.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-sd.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Sky Blade', type: 'Basic Skill', desc: 'Swings a blade forged of compressed wind.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-basicskill.png',
+        manaCost: 0, damage: 115, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-basicskilleffect.png']
+      },
+      special:  { name: 'Wind Wall',    type: 'Special Skill',  desc: 'Creates a wall of wind that deflects and retaliates.', icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Skyward-Guard-basicskill2.png', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Storm Volley', type: 'Ultimate Skill', desc: 'Launches a relentless barrage of wind blades.',         icon: '', manaCost: 20, damage: 292, cooldown: 6, frames: [] }
+    }
+  },
+
+  aero_phantom: {
+    id: 'aero_phantom', facesRight: false, spriteScale: 1.3,
+    name: 'Aero Phantom', title: 'Sky Elite',
+    element: 'Wind', role: 'Monster',
+    color: '#44ffcc', glowColor: 'rgba(68,255,204,0.7)', bgColor: '#001210',
+    stats: { hp: 700, atk: 130, def: 65, spd: 130, crit: 21 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-basicskill.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-basicskill.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-Battlefield_Concept_8.png']
+    },
+    skills: {
+      basic: {
+        name: 'Phantom Gust', type: 'Basic Skill', desc: 'Strikes from within the wind, impossible to anticipate.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-basicskill.png',
+        manaCost: 0, damage: 126, cooldown: 0,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/Aero-Phantom-basicskilleffect.png']
+      },
+      special:  { name: 'Aero Rift',    type: 'Special Skill',  desc: 'Tears a rift through the air for massive damage.', icon: '', manaCost: 10, damage: 178, cooldown: 3, frames: [] },
+      ultimate: { name: 'Sky Phantom',  type: 'Ultimate Skill', desc: 'Becomes the wind itself, striking from all sides.',   icon: '', manaCost: 20, damage: 312, cooldown: 6, frames: [] }
+    }
+  },
+
+  boreas: {
+    id: 'boreas', facesRight: false, spriteScale: 1.4,
+    name: 'Boreas', title: 'The Tempest Lord',
+    element: 'Wind', role: 'Boss',
+    color: '#00ffcc', glowColor: 'rgba(0,255,204,0.9)', bgColor: '#001412',
+    stats: { hp: 970, atk: 140, def: 77, spd: 133, crit: 23 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-idle.png',
+      walk:    'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-idle.png',
+      run:     'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-idle.png',
+      sprint:  'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-idle.png',
+      attack:  'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-basicskill.png',
+      portrait:'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-Battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Tempest Blow', type: 'Basic Skill', desc: 'A strike backed by the full force of the tempest.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-basicskill.png',
+        manaCost: 0, damage: 92, cooldown: 0,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-basicskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-basicskilleffect.png'
+        ]
+      },
+      special: {
+        name: 'Lord\'s Cyclone', type: 'Special Skill', desc: 'Summons a towering cyclone to engulf the enemy.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-specialskill.png',
+        manaCost: 10, damage: 178, cooldown: 3,
+        frames: ['https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-specialskilleffect.png']
+      },
+      ultimate: {
+        name: 'Eternal Tempest', type: 'Ultimate Skill', desc: 'Unleashes an unending storm that tears through all defenses.',
+        icon: 'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-ultimateskill.png',
+        manaCost: 20, damage: 350, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-ultimateskill2.png',
+          'https://res.cloudinary.com/wvobx3st/image/upload/BOREAS-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 9 — BRUTUS'S IRON SIEGE  (Metal enemies)
+  // ══════════════════════════════════════════════════════════
+  scrap_scuttler: {
+    id: 'scrap_scuttler', facesRight: false, spriteScale: 1.3,
+    name: 'Scrap Scuttler', title: 'Iron Pest',
+    element: 'Metal', role: 'Monster',
+    color: '#aaaaaa', glowColor: 'rgba(170,170,170,0.6)', bgColor: '#111111',
+    stats: { hp: 520, atk: 90, def: 80, spd: 88, crit: 10 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Scrap Slash', type: 'Basic Skill', desc: 'Slashes with jagged scrap metal blades.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskill.png',
+        manaCost: 0, damage: 88, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskilleffect.png']
+      },
+      special:  { name: 'Iron Scatter',  type: 'Special Skill',  desc: 'Launches a volley of scrap shards.',         icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/ScrapSscuttler-basicskill2.png', manaCost: 10, damage: 132, cooldown: 3, frames: [] },
+      ultimate: { name: 'Scrap Explosion',type: 'Ultimate Skill', desc: 'Self-detonates scrap plating for massive damage.', icon: '', manaCost: 20, damage: 248, cooldown: 6, frames: [] }
+    }
+  },
+
+  ironhide_hound: {
+    id: 'ironhide_hound', facesRight: false, spriteScale: 1.3,
+    name: 'Ironhide Hound', title: 'Steel Beast',
+    element: 'Metal', role: 'Monster',
+    color: '#888888', glowColor: 'rgba(136,136,136,0.6)', bgColor: '#0e0e0e',
+    stats: { hp: 650, atk: 108, def: 95, spd: 78, crit: 12 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Iron Bite', type: 'Basic Skill', desc: 'Clamps down with steel-reinforced jaws.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskill.png',
+        manaCost: 0, damage: 105, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskilleffect.png']
+      },
+      special:  { name: 'Steel Charge',  type: 'Special Skill',  desc: 'Charges forward with full metal body weight.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Ironhide_Hound-basicskill2.png', manaCost: 10, damage: 155, cooldown: 3, frames: [] },
+      ultimate: { name: 'Iron Frenzy',   type: 'Ultimate Skill', desc: 'Goes into a metal-armored berserk rampage.',    icon: '', manaCost: 20, damage: 275, cooldown: 6, frames: [] }
+    }
+  },
+
+  steel_sentinel: {
+    id: 'steel_sentinel', facesRight: false, spriteScale: 1.3,
+    name: 'Steel Sentinel', title: 'Iron Guard',
+    element: 'Metal', role: 'Monster',
+    color: '#999999', glowColor: 'rgba(153,153,153,0.6)', bgColor: '#101010',
+    stats: { hp: 780, atk: 115, def: 108, spd: 62, crit: 11 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Sentinel Slam', type: 'Basic Skill', desc: 'Brings down a steel gauntlet with crushing force.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskill.png',
+        manaCost: 0, damage: 112, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskilleffect.png']
+      },
+      special:  { name: 'Iron Bulwark',  type: 'Special Skill',  desc: 'Raises an impenetrable steel barrier.',      icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Steel-Sentinel-basicskill2.png', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Steel Cascade', type: 'Ultimate Skill', desc: 'Rains down a cascade of steel strikes.',      icon: '', manaCost: 20, damage: 298, cooldown: 6, frames: [] }
+    }
+  },
+
+  forged_executioner: {
+    id: 'forged_executioner', facesRight: false, spriteScale: 1.3,
+    name: 'Forged Executioner', title: 'Metal Elite',
+    element: 'Metal', role: 'Monster',
+    color: '#bbbbbb', glowColor: 'rgba(187,187,187,0.7)', bgColor: '#121212',
+    stats: { hp: 760, atk: 138, def: 85, spd: 82, crit: 16 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-basicskill.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Execution Strike', type: 'Basic Skill', desc: 'A precisely forged blow meant to end battles.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-basicskill.png',
+        manaCost: 0, damage: 134, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Forged-Executioner-basicskilleffect.png']
+      },
+      special:  { name: 'Iron Verdict',  type: 'Special Skill',  desc: 'Delivers an inescapable verdict of steel.', icon: '', manaCost: 10, damage: 188, cooldown: 3, frames: [] },
+      ultimate: { name: 'Final Decree',  type: 'Ultimate Skill', desc: 'The last and most devastating blow ever forged.', icon: '', manaCost: 20, damage: 322, cooldown: 6, frames: [] }
+    }
+  },
+
+  valkor: {
+    id: 'valkor', facesRight: false, spriteScale: 1.4,
+    name: 'Valkor', title: 'The Steel Colossus',
+    element: 'Metal', role: 'Boss',
+    color: '#cccccc', glowColor: 'rgba(204,204,204,0.9)', bgColor: '#141414',
+    stats: { hp: 1050, atk: 122, def: 133, spd: 67, crit: 11 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-idle.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Colossus Crush', type: 'Basic Skill', desc: 'Brings down a colossal iron fist.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-basicskill.png',
+        manaCost: 0, damage: 92, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-basicskilleffect.png']
+      },
+      special: {
+        name: 'Iron Dominion', type: 'Special Skill', desc: 'Commands the iron siege to converge on the enemy.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-specialskill.png',
+        manaCost: 10, damage: 160, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-specialskill2.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-specialskilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'Steel Apocalypse', type: 'Ultimate Skill', desc: 'Unleashes the full destructive might of the iron colossus.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-ultimateskill.png',
+        manaCost: 20, damage: 350, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-ultimateskill2.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-ultimateskill3.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Valkor-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 10 — ELYSIA'S CELESTIAL TOWER  (Arcane enemies)
+  // ══════════════════════════════════════════════════════════
+  astral_sprite: {
+    id: 'astral_sprite', facesRight: false, spriteScale: 1.3,
+    name: 'Astral Sprite', title: 'Cosmic Wisp',
+    element: 'Arcane', role: 'Monster',
+    color: '#cc88ff', glowColor: 'rgba(204,136,255,0.6)', bgColor: '#060014',
+    stats: { hp: 520, atk: 105, def: 45, spd: 138, crit: 18 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Arcane Bolt', type: 'Basic Skill', desc: 'Fires a bolt of pure arcane energy.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskill.png',
+        manaCost: 0, damage: 102, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskilleffect.png']
+      },
+      special:  { name: 'Star Flare',    type: 'Special Skill',  desc: 'Releases a burst of star energy.',           icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Astra_Sprite-basicskill2.png', manaCost: 10, damage: 148, cooldown: 3, frames: [] },
+      ultimate: { name: 'Cosmic Surge',  type: 'Ultimate Skill', desc: 'Channels the cosmos into a devastating beam.', icon: '', manaCost: 20, damage: 265, cooldown: 6, frames: [] }
+    }
+  },
+
+  starlight_prowler: {
+    id: 'starlight_prowler', facesRight: false, spriteScale: 1.3,
+    name: 'Starlight Prowler', title: 'Arcane Hunter',
+    element: 'Arcane', role: 'Monster',
+    color: '#aa66ff', glowColor: 'rgba(170,102,255,0.6)', bgColor: '#050012',
+    stats: { hp: 650, atk: 118, def: 65, spd: 122, crit: 19 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Star Strike', type: 'Basic Skill', desc: 'Attacks with a blade of concentrated starlight.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskill.png',
+        manaCost: 0, damage: 115, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskilleffect.png']
+      },
+      special:  { name: 'Nebula Rush',   type: 'Special Skill',  desc: 'Dashes through leaving a trail of star energy.', icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Starlight-basicskill2.png', manaCost: 10, damage: 165, cooldown: 3, frames: [] },
+      ultimate: { name: 'Supernova',     type: 'Ultimate Skill', desc: 'Implodes starlight into a supernova blast.',       icon: '', manaCost: 20, damage: 295, cooldown: 6, frames: [] }
+    }
+  },
+
+  celestial_guard: {
+    id: 'celestial_guard', facesRight: false, spriteScale: 1.3,
+    name: 'Celestial Guard', title: 'Arcane Sentinel',
+    element: 'Arcane', role: 'Monster',
+    color: '#8844ff', glowColor: 'rgba(136,68,255,0.6)', bgColor: '#04000f',
+    stats: { hp: 800, atk: 125, def: 105, spd: 75, crit: 15 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-basicskill.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Celestial Slash', type: 'Basic Skill', desc: 'Strikes with an arcane-forged celestial blade.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-basicskill.png',
+        manaCost: 0, damage: 122, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Celestial_Guard-basicskilleffect.png']
+      },
+      special:  { name: 'Arcane Barrier', type: 'Special Skill',  desc: 'Conjures a barrier of arcane energy.',        icon: '', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Star Judgment',  type: 'Ultimate Skill', desc: 'Calls down judgment from the celestial realm.', icon: '', manaCost: 20, damage: 305, cooldown: 6, frames: [] }
+    }
+  },
+
+  cosmic_phantom: {
+    id: 'cosmic_phantom', facesRight: false, spriteScale: 1.3,
+    name: 'Cosmic Phantom', title: 'Arcane Elite',
+    element: 'Arcane', role: 'Monster',
+    color: '#7722ff', glowColor: 'rgba(119,34,255,0.7)', bgColor: '#040010',
+    stats: { hp: 780, atk: 140, def: 72, spd: 128, crit: 22 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskill.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskill2.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Void Star', type: 'Basic Skill', desc: 'Strikes from within the cosmos, bypassing defenses.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskill.png',
+        manaCost: 0, damage: 136, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskilleffect.png']
+      },
+      special:  { name: 'Galaxy Rift',    type: 'Special Skill',  desc: 'Tears open a rift in the fabric of space.',    icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Cosmis-Phantom-basicskill2.png', manaCost: 10, damage: 192, cooldown: 3, frames: [] },
+      ultimate: { name: 'Cosmic Erasure', type: 'Ultimate Skill', desc: 'Erases the target from existence momentarily.', icon: '', manaCost: 20, damage: 328, cooldown: 6, frames: [] }
+    }
+  },
+
+  astralis: {
+    id: 'astralis', facesRight: false, spriteScale: 1.4,
+    name: 'Astralis', title: 'The Cosmic Emperor',
+    element: 'Arcane', role: 'Boss',
+    color: '#ff88ff', glowColor: 'rgba(255,136,255,0.9)', bgColor: '#080018',
+    stats: { hp: 900, atk: 155, def: 62, spd: 103, crit: 29 },
+    sprites: {
+      idle:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-idle.png',
+      walk:    'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-idle.png',
+      run:     'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-idle.png',
+      sprint:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-idle.png',
+      attack:  'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-basicskill.png',
+      portrait:'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-battlefield.png']
+    },
+    skills: {
+      basic: {
+        name: 'Emperor\'s Wrath', type: 'Basic Skill', desc: 'Delivers a blow carrying the full weight of the cosmos.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-basicskill.png',
+        manaCost: 0, damage: 102, cooldown: 0,
+        frames: ['https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-basicskilleffect.png']
+      },
+      special: {
+        name: 'Cosmic Dominion', type: 'Special Skill', desc: 'Commands the stars to rain down upon the enemy.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-specialskill.png',
+        manaCost: 10, damage: 195, cooldown: 3,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-specialskill2.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-specialskilleffect.png'
+        ]
+      },
+      ultimate: {
+        name: 'Big Bang', type: 'Ultimate Skill', desc: 'Recreates the birth of the universe in a single devastating explosion.',
+        icon: 'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-ultimateskill.png',
+        manaCost: 20, damage: 390, cooldown: 6,
+        frames: [
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-ultimateskill.png',
+          'https://res.cloudinary.com/jtrgd4x8/image/upload/Astralis-ultimateskilleffect.png'
+        ]
+      }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 2 — THE SHATTERED REALM  (Lightning enemies — kept for future chapters)
+  // ══════════════════════════════════════════════════════════
+  storm_sprite: {
+    id: 'storm_sprite', facesRight: true, spriteScale: 1.3,
+    name: 'Storm Sprite', title: 'Thunder Wisp',
+    element: 'Lightning', role: 'Monster',
+    color: '#ffe600', glowColor: 'rgba(255,230,0,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 460, atk: 85, def: 35, spd: 120, crit: 14 },
+    sprites: {
+      idle:   'StoryEnemies/Lightning/Storm Sprite/idle.png',
+      walk:   'StoryEnemies/Lightning/Storm Sprite/walk.png',
+      run:    'StoryEnemies/Lightning/Storm Sprite/run.png',
+      sprint: 'StoryEnemies/Lightning/Storm Sprite/sprint.png',
+      attack: 'StoryEnemies/Lightning/Storm Sprite/attack.png',
+      portrait: 'StoryEnemies/Lightning/Storm Sprite/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Lightning/Storm Sprite/background.png']
+    },
+    skills: {
+      basic:    { name: 'Spark Jab',     type: 'Basic Skill',   desc: 'Zaps the enemy with a quick bolt.',         icon: '', manaCost: 0,  damage: 80,  cooldown: 0, frames: [] },
+      special:  { name: 'Volt Chain',    type: 'Special Skill', desc: 'Chains lightning between multiple hits.',   icon: '', manaCost: 10, damage: 120, cooldown: 3, frames: [] },
+      ultimate: { name: 'Thunder Crash', type: 'Ultimate Skill',desc: 'Summons a massive bolt from above.',        icon: '', manaCost: 20, damage: 220, cooldown: 6, frames: [] }
+    }
+  },
+
+  thunder_hawk: {
+    id: 'thunder_hawk', facesRight: false, spriteScale: 1.3,
+    name: 'Thunder Hawk', title: 'Storm Predator',
+    element: 'Lightning', role: 'Monster',
+    color: '#ffdd00', glowColor: 'rgba(255,221,0,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 580, atk: 110, def: 50, spd: 130, crit: 18 },
+    sprites: {
+      idle:   'StoryEnemies/Lightning/Thunder Hawk/idle.png',
+      walk:   'StoryEnemies/Lightning/Thunder Hawk/walk.png',
+      run:    'StoryEnemies/Lightning/Thunder Hawk/run.png',
+      sprint: 'StoryEnemies/Lightning/Thunder Hawk/sprint.png',
+      attack: 'StoryEnemies/Lightning/Thunder Hawk/attack.png',
+      portrait: 'StoryEnemies/Lightning/Thunder Hawk/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Lightning/Thunder Hawk/background.png']
+    },
+    skills: {
+      basic:    { name: 'Talon Strike',  type: 'Basic Skill',   desc: 'Dives with electrified talons.',            icon: '', manaCost: 0,  damage: 100, cooldown: 0, frames: [] },
+      special:  { name: 'Storm Dive',    type: 'Special Skill', desc: 'Plummets from the sky at lightning speed.', icon: '', manaCost: 10, damage: 145, cooldown: 3, frames: [] },
+      ultimate: { name: 'Gale Screech',  type: 'Ultimate Skill',desc: 'Unleashes a deafening storm shriek.',       icon: '', manaCost: 20, damage: 250, cooldown: 6, frames: [] }
+    }
+  },
+
+  volt_hound: {
+    id: 'volt_hound', facesRight: true, spriteScale: 1.3,
+    name: 'Volt Hound', title: 'Electric Beast',
+    element: 'Lightning', role: 'Monster',
+    color: '#ffee44', glowColor: 'rgba(255,238,68,0.6)', bgColor: '#0d0d00',
+    stats: { hp: 650, atk: 100, def: 60, spd: 115, crit: 16 },
+    sprites: {
+      idle:   'StoryEnemies/Lightning/Volt Hound/idle.png',
+      walk:   'StoryEnemies/Lightning/Volt Hound/walk.png',
+      run:    'StoryEnemies/Lightning/Volt Hound/run.png',
+      sprint: 'StoryEnemies/Lightning/Volt Hound/sprint.png',
+      attack: 'StoryEnemies/Lightning/Volt Hound/attack.png',
+      portrait: 'StoryEnemies/Lightning/Volt Hound/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Lightning/Volt Hound/background.png']
+    },
+    skills: {
+      basic:    { name: 'Static Bite',   type: 'Basic Skill',   desc: 'Bites and shocks simultaneously.',          icon: '', manaCost: 0,  damage: 95,  cooldown: 0, frames: [] },
+      special:  { name: 'Volt Pounce',   type: 'Special Skill', desc: 'Leaps forward in a burst of electricity.',  icon: '', manaCost: 10, damage: 140, cooldown: 3, frames: [] },
+      ultimate: { name: 'Thunder Maw',   type: 'Ultimate Skill',desc: 'Opens a magnetic jaw that crackles with power.', icon: '', manaCost: 20, damage: 255, cooldown: 6, frames: [] }
+    }
+  },
+
+  storm_giant: {
+    id: 'storm_giant', facesRight: false, spriteScale: 1.3,
+    name: 'Storm Giant', title: 'Thunder Colossus',
+    element: 'Lightning', role: 'Monster',
+    color: '#cccc00', glowColor: 'rgba(204,204,0,0.6)', bgColor: '#111100',
+    stats: { hp: 900, atk: 120, def: 85, spd: 70, crit: 12 },
+    sprites: {
+      idle:   'StoryEnemies/Lightning/Storm Giant/idle.png',
+      walk:   'StoryEnemies/Lightning/Storm Giant/walk.png',
+      run:    'StoryEnemies/Lightning/Storm Giant/run.png',
+      sprint: 'StoryEnemies/Lightning/Storm Giant/sprint.png',
+      attack: 'StoryEnemies/Lightning/Storm Giant/attack.png',
+      portrait: 'StoryEnemies/Lightning/Storm Giant/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Lightning/Storm Giant/background.png']
+    },
+    skills: {
+      basic:    { name: 'Thunderclap',   type: 'Basic Skill',   desc: 'Claps hands together with thunderous force.', icon: '', manaCost: 0,  damage: 115, cooldown: 0, frames: [] },
+      special:  { name: 'Stormfist',     type: 'Special Skill', desc: 'Drives a lightning-coated fist into the ground.', icon: '', manaCost: 10, damage: 165, cooldown: 3, frames: [] },
+      ultimate: { name: 'Sky Collapse',  type: 'Ultimate Skill',desc: 'Pulls lightning from the clouds and slams it down.', icon: '', manaCost: 20, damage: 300, cooldown: 6, frames: [] }
+    }
+  },
+
+  zeus_herald: {
+    id: 'zeus_herald', facesRight: true, spriteScale: 1.4,
+    name: 'Zeus Herald', title: 'Chapter 2 Boss',
+    element: 'Lightning', role: 'Boss',
+    color: '#ffee00', glowColor: 'rgba(255,238,0,0.8)', bgColor: '#1a1a00',
+    stats: { hp: 1300, atk: 145, def: 85, spd: 105, crit: 20 },
+    sprites: {
+      idle:   'StoryEnemies/Lightning/Zeus Herald/idle.png',
+      walk:   'StoryEnemies/Lightning/Zeus Herald/walk.png',
+      run:    'StoryEnemies/Lightning/Zeus Herald/run.png',
+      sprint: 'StoryEnemies/Lightning/Zeus Herald/sprint.png',
+      attack: 'StoryEnemies/Lightning/Zeus Herald/attack.png',
+      portrait: 'StoryEnemies/Lightning/Zeus Herald/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Lightning/Zeus Herald/background.png']
+    },
+    skills: {
+      basic:    { name: 'Bolt of Judgment', type: 'Basic Skill',   desc: 'Hurls a divine thunderbolt.',              icon: '', manaCost: 0,  damage: 140, cooldown: 0, frames: [] },
+      special:  { name: 'Storm Domain',     type: 'Special Skill', desc: 'Charges the battlefield with electricity.', icon: '', manaCost: 10, damage: 210, cooldown: 3, frames: [] },
+      ultimate: { name: 'Divine Thunder',   type: 'Ultimate Skill',desc: 'Calls down a pillar of divine lightning.',  icon: '', manaCost: 20, damage: 400, cooldown: 6, frames: [] }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 3 — SHADOWS AND STARS  (Dark / Shadow enemies)
+  // ══════════════════════════════════════════════════════════
+  shade_wraith: {
+    id: 'shade_wraith', facesRight: false, spriteScale: 1.3,
+    name: 'Shade Wraith', title: 'Hollow Spirit',
+    element: 'Dark', role: 'Monster',
+    color: '#9932cc', glowColor: 'rgba(153,50,204,0.6)', bgColor: '#0a0010',
+    stats: { hp: 480, atk: 90, def: 30, spd: 115, crit: 18 },
+    sprites: {
+      idle:   'StoryEnemies/Shadow/Shade Wraith/idle.png',
+      walk:   'StoryEnemies/Shadow/Shade Wraith/walk.png',
+      run:    'StoryEnemies/Shadow/Shade Wraith/run.png',
+      sprint: 'StoryEnemies/Shadow/Shade Wraith/sprint.png',
+      attack: 'StoryEnemies/Shadow/Shade Wraith/attack.png',
+      portrait: 'StoryEnemies/Shadow/Shade Wraith/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Shadow/Shade Wraith/background.png']
+    },
+    skills: {
+      basic:    { name: 'Shadow Touch',  type: 'Basic Skill',   desc: 'Drains life with a ghostly hand.',          icon: '', manaCost: 0,  damage: 85,  cooldown: 0, frames: [] },
+      special:  { name: 'Void Slash',    type: 'Special Skill', desc: 'Tears through dimensions in a dark arc.',   icon: '', manaCost: 10, damage: 125, cooldown: 3, frames: [] },
+      ultimate: { name: 'Soul Rend',     type: 'Ultimate Skill',desc: 'Rips the soul partially from the body.',    icon: '', manaCost: 20, damage: 230, cooldown: 6, frames: [] }
+    }
+  },
+
+  dark_stalker: {
+    id: 'dark_stalker', facesRight: true, spriteScale: 1.3,
+    name: 'Dark Stalker', title: 'Shadow Hunter',
+    element: 'Dark', role: 'Monster',
+    color: '#7700bb', glowColor: 'rgba(119,0,187,0.6)', bgColor: '#0a0010',
+    stats: { hp: 600, atk: 115, def: 55, spd: 125, crit: 22 },
+    sprites: {
+      idle:   'StoryEnemies/Shadow/Dark Stalker/idle.png',
+      walk:   'StoryEnemies/Shadow/Dark Stalker/walk.png',
+      run:    'StoryEnemies/Shadow/Dark Stalker/run.png',
+      sprint: 'StoryEnemies/Shadow/Dark Stalker/sprint.png',
+      attack: 'StoryEnemies/Shadow/Dark Stalker/attack.png',
+      portrait: 'StoryEnemies/Shadow/Dark Stalker/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Shadow/Dark Stalker/background.png']
+    },
+    skills: {
+      basic:    { name: 'Shadowstep',    type: 'Basic Skill',   desc: 'Teleports behind and strikes.',             icon: '', manaCost: 0,  damage: 105, cooldown: 0, frames: [] },
+      special:  { name: 'Umbra Strike',  type: 'Special Skill', desc: 'Materializes from darkness for a crit.',    icon: '', manaCost: 10, damage: 160, cooldown: 3, frames: [] },
+      ultimate: { name: 'Dark Pursuit',  type: 'Ultimate Skill',desc: 'Relentlessly slashes from every angle.',    icon: '', manaCost: 20, damage: 270, cooldown: 6, frames: [] }
+    }
+  },
+
+  void_knight: {
+    id: 'void_knight', facesRight: false, spriteScale: 1.3,
+    name: 'Void Knight', title: 'Armor of Darkness',
+    element: 'Dark', role: 'Monster',
+    color: '#5500aa', glowColor: 'rgba(85,0,170,0.6)', bgColor: '#080018',
+    stats: { hp: 800, atk: 110, def: 100, spd: 75, crit: 14 },
+    sprites: {
+      idle:   'StoryEnemies/Shadow/Void Knight/idle.png',
+      walk:   'StoryEnemies/Shadow/Void Knight/walk.png',
+      run:    'StoryEnemies/Shadow/Void Knight/run.png',
+      sprint: 'StoryEnemies/Shadow/Void Knight/sprint.png',
+      attack: 'StoryEnemies/Shadow/Void Knight/attack.png',
+      portrait: 'StoryEnemies/Shadow/Void Knight/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Shadow/Void Knight/background.png']
+    },
+    skills: {
+      basic:    { name: 'Dark Blade',    type: 'Basic Skill',   desc: 'Swings an obsidian sword.',                 icon: '', manaCost: 0,  damage: 105, cooldown: 0, frames: [] },
+      special:  { name: 'Shadow Guard',  type: 'Special Skill', desc: 'Raises a void shield, nullifying damage.',  icon: '', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Abyss Cleave',  type: 'Ultimate Skill',desc: 'Slashes reality itself with dark energy.',  icon: '', manaCost: 20, damage: 290, cooldown: 6, frames: [] }
+    }
+  },
+
+  nightmare_beast: {
+    id: 'nightmare_beast', facesRight: true, spriteScale: 1.3,
+    name: 'Nightmare Beast', title: 'Fear Incarnate',
+    element: 'Dark', role: 'Monster',
+    color: '#aa0099', glowColor: 'rgba(170,0,153,0.6)', bgColor: '#100010',
+    stats: { hp: 750, atk: 130, def: 70, spd: 105, crit: 20 },
+    sprites: {
+      idle:   'StoryEnemies/Shadow/Nightmare Beast/idle.png',
+      walk:   'StoryEnemies/Shadow/Nightmare Beast/walk.png',
+      run:    'StoryEnemies/Shadow/Nightmare Beast/run.png',
+      sprint: 'StoryEnemies/Shadow/Nightmare Beast/sprint.png',
+      attack: 'StoryEnemies/Shadow/Nightmare Beast/attack.png',
+      portrait: 'StoryEnemies/Shadow/Nightmare Beast/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Shadow/Nightmare Beast/background.png']
+    },
+    skills: {
+      basic:    { name: 'Terror Claw',   type: 'Basic Skill',   desc: 'Rakes with nightmare-infused claws.',       icon: '', manaCost: 0,  damage: 120, cooldown: 0, frames: [] },
+      special:  { name: 'Dread Howl',    type: 'Special Skill', desc: 'Paralyzes with a blood-curdling screech.',  icon: '', manaCost: 10, damage: 170, cooldown: 3, frames: [] },
+      ultimate: { name: 'Void Ravage',   type: 'Ultimate Skill',desc: 'Tears through dimensions with dark claws.', icon: '', manaCost: 20, damage: 310, cooldown: 6, frames: [] }
+    }
+  },
+
+  shadow_emperor: {
+    id: 'shadow_emperor', facesRight: false, spriteScale: 1.4,
+    name: 'Shadow Emperor', title: 'Chapter 3 Boss',
+    element: 'Dark', role: 'Boss',
+    color: '#cc00ff', glowColor: 'rgba(204,0,255,0.8)', bgColor: '#130020',
+    stats: { hp: 1400, atk: 155, def: 90, spd: 110, crit: 22 },
+    sprites: {
+      idle:   'StoryEnemies/Shadow/Shadow Emperor/idle.png',
+      walk:   'StoryEnemies/Shadow/Shadow Emperor/walk.png',
+      run:    'StoryEnemies/Shadow/Shadow Emperor/run.png',
+      sprint: 'StoryEnemies/Shadow/Shadow Emperor/sprint.png',
+      attack: 'StoryEnemies/Shadow/Shadow Emperor/attack.png',
+      portrait: 'StoryEnemies/Shadow/Shadow Emperor/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Shadow/Shadow Emperor/background.png']
+    },
+    skills: {
+      basic:    { name: 'Eclipse Strike',  type: 'Basic Skill',   desc: 'Strikes with the power of an eclipse.',    icon: '', manaCost: 0,  damage: 145, cooldown: 0, frames: [] },
+      special:  { name: 'Dark Dominion',   type: 'Special Skill', desc: 'Commands all shadows to converge.',        icon: '', manaCost: 10, damage: 220, cooldown: 3, frames: [] },
+      ultimate: { name: 'Eternal Darkness',type: 'Ultimate Skill',desc: 'Plunges the world into absolute shadow.',   icon: '', manaCost: 20, damage: 420, cooldown: 6, frames: [] }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 4 — RISE OF THE IRON LEGION  (Metal enemies)
+  // ══════════════════════════════════════════════════════════
+  iron_grunt: {
+    id: 'iron_grunt', facesRight: true, spriteScale: 1.3,
+    name: 'Iron Grunt', title: 'Steel Soldier',
+    element: 'Metal', role: 'Monster',
+    color: '#aaaaaa', glowColor: 'rgba(170,170,170,0.5)', bgColor: '#111111',
+    stats: { hp: 550, atk: 90, def: 90, spd: 65, crit: 10 },
+    sprites: {
+      idle:   'StoryEnemies/Metal/Iron Grunt/idle.png',
+      walk:   'StoryEnemies/Metal/Iron Grunt/walk.png',
+      run:    'StoryEnemies/Metal/Iron Grunt/run.png',
+      sprint: 'StoryEnemies/Metal/Iron Grunt/sprint.png',
+      attack: 'StoryEnemies/Metal/Iron Grunt/attack.png',
+      portrait: 'StoryEnemies/Metal/Iron Grunt/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Metal/Iron Grunt/background.png']
+    },
+    skills: {
+      basic:    { name: 'Shield Bash',   type: 'Basic Skill',   desc: 'Rams with an iron shield.',                 icon: '', manaCost: 0,  damage: 85,  cooldown: 0, frames: [] },
+      special:  { name: 'Steel Wall',    type: 'Special Skill', desc: 'Raises a steel barrier, halving damage.',   icon: '', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Iron Avalanche',type: 'Ultimate Skill',desc: 'Charges forward in full armor.',            icon: '', manaCost: 20, damage: 220, cooldown: 6, frames: [] }
+    }
+  },
+
+  blade_automaton: {
+    id: 'blade_automaton', facesRight: false, spriteScale: 1.3,
+    name: 'Blade Automaton', title: 'War Machine',
+    element: 'Metal', role: 'Monster',
+    color: '#cc9900', glowColor: 'rgba(204,153,0,0.6)', bgColor: '#111100',
+    stats: { hp: 680, atk: 120, def: 80, spd: 80, crit: 13 },
+    sprites: {
+      idle:   'StoryEnemies/Metal/Blade Automaton/idle.png',
+      walk:   'StoryEnemies/Metal/Blade Automaton/walk.png',
+      run:    'StoryEnemies/Metal/Blade Automaton/run.png',
+      sprint: 'StoryEnemies/Metal/Blade Automaton/sprint.png',
+      attack: 'StoryEnemies/Metal/Blade Automaton/attack.png',
+      portrait: 'StoryEnemies/Metal/Blade Automaton/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Metal/Blade Automaton/background.png']
+    },
+    skills: {
+      basic:    { name: 'Spinning Blades', type: 'Basic Skill',   desc: 'Activates rotating saw arms.',             icon: '', manaCost: 0,  damage: 110, cooldown: 0, frames: [] },
+      special:  { name: 'Gear Barrage',    type: 'Special Skill', desc: 'Fires a volley of razor-sharp gears.',     icon: '', manaCost: 10, damage: 155, cooldown: 3, frames: [] },
+      ultimate: { name: 'Full Assault',    type: 'Ultimate Skill',desc: 'Overclocks all systems for total destruction.', icon: '', manaCost: 20, damage: 270, cooldown: 6, frames: [] }
+    }
+  },
+
+  steel_colossus: {
+    id: 'steel_colossus', facesRight: true, spriteScale: 1.3,
+    name: 'Steel Colossus', title: 'Iron Titan',
+    element: 'Metal', role: 'Monster',
+    color: '#bbbbbb', glowColor: 'rgba(187,187,187,0.6)', bgColor: '#111111',
+    stats: { hp: 1000, atk: 115, def: 120, spd: 50, crit: 9 },
+    sprites: {
+      idle:   'StoryEnemies/Metal/Steel Colossus/idle.png',
+      walk:   'StoryEnemies/Metal/Steel Colossus/walk.png',
+      run:    'StoryEnemies/Metal/Steel Colossus/run.png',
+      sprint: 'StoryEnemies/Metal/Steel Colossus/sprint.png',
+      attack: 'StoryEnemies/Metal/Steel Colossus/attack.png',
+      portrait: 'StoryEnemies/Metal/Steel Colossus/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Metal/Steel Colossus/background.png']
+    },
+    skills: {
+      basic:    { name: 'Titan Fist',    type: 'Basic Skill',   desc: 'Crushes with a massive iron fist.',          icon: '', manaCost: 0,  damage: 115, cooldown: 0, frames: [] },
+      special:  { name: 'Fortress Mode', type: 'Special Skill', desc: 'Locks down with maximum armor density.',     icon: '', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'Colossus Stomp',type: 'Ultimate Skill',desc: 'Shakes the earth with a single step.',       icon: '', manaCost: 20, damage: 290, cooldown: 6, frames: [] }
+    }
+  },
+
+  war_commander: {
+    id: 'war_commander', facesRight: false, spriteScale: 1.3,
+    name: 'War Commander', title: 'Legion General',
+    element: 'Metal', role: 'Monster',
+    color: '#dd9900', glowColor: 'rgba(221,153,0,0.6)', bgColor: '#150f00',
+    stats: { hp: 850, atk: 135, def: 100, spd: 80, crit: 15 },
+    sprites: {
+      idle:   'StoryEnemies/Metal/War Commander/idle.png',
+      walk:   'StoryEnemies/Metal/War Commander/walk.png',
+      run:    'StoryEnemies/Metal/War Commander/run.png',
+      sprint: 'StoryEnemies/Metal/War Commander/sprint.png',
+      attack: 'StoryEnemies/Metal/War Commander/attack.png',
+      portrait: 'StoryEnemies/Metal/War Commander/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Metal/War Commander/background.png']
+    },
+    skills: {
+      basic:    { name: 'War Axe',       type: 'Basic Skill',   desc: 'Cleaves with a massive battle axe.',         icon: '', manaCost: 0,  damage: 125, cooldown: 0, frames: [] },
+      special:  { name: 'Rally Charge',  type: 'Special Skill', desc: 'Charges with reinforced momentum.',          icon: '', manaCost: 10, damage: 175, cooldown: 3, frames: [] },
+      ultimate: { name: 'Iron Dominance',type: 'Ultimate Skill',desc: 'Unleashes the full might of the Iron Legion.',icon: '', manaCost: 20, damage: 320, cooldown: 6, frames: [] }
+    }
+  },
+
+  iron_overlord: {
+    id: 'iron_overlord', facesRight: true, spriteScale: 1.4,
+    name: 'Iron Overlord', title: 'Chapter 4 Boss',
+    element: 'Metal', role: 'Boss',
+    color: '#ffbb00', glowColor: 'rgba(255,187,0,0.8)', bgColor: '#1a1000',
+    stats: { hp: 1500, atk: 160, def: 130, spd: 75, crit: 18 },
+    sprites: {
+      idle:   'StoryEnemies/Metal/Iron Overlord/idle.png',
+      walk:   'StoryEnemies/Metal/Iron Overlord/walk.png',
+      run:    'StoryEnemies/Metal/Iron Overlord/run.png',
+      sprint: 'StoryEnemies/Metal/Iron Overlord/sprint.png',
+      attack: 'StoryEnemies/Metal/Iron Overlord/attack.png',
+      portrait: 'StoryEnemies/Metal/Iron Overlord/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Metal/Iron Overlord/background.png']
+    },
+    skills: {
+      basic:    { name: 'Judgment Hammer', type: 'Basic Skill',  desc: 'Brings down a hammer of absolute judgment.',  icon: '', manaCost: 0,  damage: 155, cooldown: 0, frames: [] },
+      special:  { name: 'Legion Fortify',  type: 'Special Skill',desc: 'Reinforces iron plating to near-invincibility.',icon:'', manaCost: 10, damage: 0,   cooldown: 3, frames: [] },
+      ultimate: { name: 'World Crusher',   type: 'Ultimate Skill',desc: 'Brings the full might of the Iron Legion down.',icon:'', manaCost: 20, damage: 440, cooldown: 6, frames: [] }
+    }
+  },
+
+  // ══════════════════════════════════════════════════════════
+  // CHAPTER 5 — THE FINAL RECKONING  (Mixed / Final Bosses)
+  // ══════════════════════════════════════════════════════════
+  void_sentinel: {
+    id: 'void_sentinel', facesRight: false, spriteScale: 1.3,
+    name: 'Void Sentinel', title: 'Gatekeeper',
+    element: 'Dark', role: 'Monster',
+    color: '#8800cc', glowColor: 'rgba(136,0,204,0.6)', bgColor: '#0e0018',
+    stats: { hp: 700, atk: 125, def: 80, spd: 90, crit: 16 },
+    sprites: {
+      idle:   'StoryEnemies/Final/Void Sentinel/idle.png',
+      walk:   'StoryEnemies/Final/Void Sentinel/walk.png',
+      run:    'StoryEnemies/Final/Void Sentinel/run.png',
+      sprint: 'StoryEnemies/Final/Void Sentinel/sprint.png',
+      attack: 'StoryEnemies/Final/Void Sentinel/attack.png',
+      portrait: 'StoryEnemies/Final/Void Sentinel/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Final/Void Sentinel/background.png']
+    },
+    skills: {
+      basic:    { name: 'Void Lance',    type: 'Basic Skill',   desc: 'Hurls a spear of pure void energy.',         icon: '', manaCost: 0,  damage: 120, cooldown: 0, frames: [] },
+      special:  { name: 'Gate Seal',     type: 'Special Skill', desc: 'Seals the enemy\'s power temporarily.',      icon: '', manaCost: 10, damage: 160, cooldown: 3, frames: [] },
+      ultimate: { name: 'Void Collapse', type: 'Ultimate Skill',desc: 'Implodes a pocket of void energy on the foe.',icon:'', manaCost: 20, damage: 300, cooldown: 6, frames: [] }
+    }
+  },
+
+  chaos_dragon: {
+    id: 'chaos_dragon', facesRight: true, spriteScale: 1.3,
+    name: 'Chaos Dragon', title: 'Harbinger of Ruin',
+    element: 'Fire', role: 'Monster',
+    color: '#ff2200', glowColor: 'rgba(255,34,0,0.7)', bgColor: '#1a0500',
+    stats: { hp: 900, atk: 150, def: 90, spd: 100, crit: 20 },
+    sprites: {
+      idle:   'StoryEnemies/Final/Chaos Dragon/idle.png',
+      walk:   'StoryEnemies/Final/Chaos Dragon/walk.png',
+      run:    'StoryEnemies/Final/Chaos Dragon/run.png',
+      sprint: 'StoryEnemies/Final/Chaos Dragon/sprint.png',
+      attack: 'StoryEnemies/Final/Chaos Dragon/attack.png',
+      portrait: 'StoryEnemies/Final/Chaos Dragon/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Final/Chaos Dragon/background.png']
+    },
+    skills: {
+      basic:    { name: 'Dragon Claw',   type: 'Basic Skill',   desc: 'Rakes with massive chaos-touched claws.',    icon: '', manaCost: 0,  damage: 140, cooldown: 0, frames: [] },
+      special:  { name: 'Chaos Breath',  type: 'Special Skill', desc: 'Breathes swirling flames of pure entropy.',  icon: '', manaCost: 10, damage: 200, cooldown: 3, frames: [] },
+      ultimate: { name: 'Dragon\'s Wrath',type:'Ultimate Skill',desc: 'Unleashes total draconic destruction.',      icon: '', manaCost: 20, damage: 360, cooldown: 6, frames: [] }
+    }
+  },
+
+  phantom_warlord: {
+    id: 'phantom_warlord', facesRight: false, spriteScale: 1.3,
+    name: 'Phantom Warlord', title: 'Fallen Champion',
+    element: 'Dark', role: 'Monster',
+    color: '#bb44ff', glowColor: 'rgba(187,68,255,0.7)', bgColor: '#100015',
+    stats: { hp: 1000, atk: 145, def: 95, spd: 105, crit: 22 },
+    sprites: {
+      idle:   'StoryEnemies/Final/Phantom Warlord/idle.png',
+      walk:   'StoryEnemies/Final/Phantom Warlord/walk.png',
+      run:    'StoryEnemies/Final/Phantom Warlord/run.png',
+      sprint: 'StoryEnemies/Final/Phantom Warlord/sprint.png',
+      attack: 'StoryEnemies/Final/Phantom Warlord/attack.png',
+      portrait: 'StoryEnemies/Final/Phantom Warlord/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Final/Phantom Warlord/background.png']
+    },
+    skills: {
+      basic:    { name: 'Phantom Slash', type: 'Basic Skill',   desc: 'A ghostly strike that bypasses defenses.',   icon: '', manaCost: 0,  damage: 135, cooldown: 0, frames: [] },
+      special:  { name: 'Spectral Surge',type: 'Special Skill', desc: 'Charges with spectral energy.',              icon: '', manaCost: 10, damage: 195, cooldown: 3, frames: [] },
+      ultimate: { name: 'Warlord\'s Rage',type:'Ultimate Skill',desc: 'Unleashes the full fury of a fallen champion.',icon:'', manaCost: 20, damage: 350, cooldown: 6, frames: [] }
+    }
+  },
+
+  genesis_titan: {
+    id: 'genesis_titan', facesRight: true, spriteScale: 1.4,
+    name: 'Genesis Titan', title: 'World Ender',
+    element: 'Arcane', role: 'Boss',
+    color: '#ff88ff', glowColor: 'rgba(255,136,255,0.8)', bgColor: '#150020',
+    stats: { hp: 1600, atk: 165, def: 110, spd: 95, crit: 24 },
+    sprites: {
+      idle:   'StoryEnemies/Final/Genesis Titan/idle.png',
+      walk:   'StoryEnemies/Final/Genesis Titan/walk.png',
+      run:    'StoryEnemies/Final/Genesis Titan/run.png',
+      sprint: 'StoryEnemies/Final/Genesis Titan/sprint.png',
+      attack: 'StoryEnemies/Final/Genesis Titan/attack.png',
+      portrait: 'StoryEnemies/Final/Genesis Titan/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Final/Genesis Titan/background.png']
+    },
+    skills: {
+      basic:    { name: 'Cosmic Slam',    type: 'Basic Skill',   desc: 'Crashes down with the weight of the cosmos.', icon:'', manaCost: 0,  damage: 150, cooldown: 0, frames: [] },
+      special:  { name: 'Star Collapse',  type: 'Special Skill', desc: 'Implodes a star onto the enemy.',             icon:'', manaCost: 10, damage: 220, cooldown: 3, frames: [] },
+      ultimate: { name: 'Genesis Burst',  type: 'Ultimate Skill',desc: 'Detonates primordial energy across reality.',  icon:'', manaCost: 20, damage: 460, cooldown: 6, frames: [] }
+    }
+  },
+
+  tenfold_sovereign: {
+    id: 'tenfold_sovereign', facesRight: false, spriteScale: 1.3,
+    name: 'Tenfold Sovereign', title: 'FINAL BOSS',
+    element: 'Arcane', role: 'Final Boss',
+    color: '#ffcc00', glowColor: 'rgba(255,204,0,0.9)', bgColor: '#100020',
+    stats: { hp: 2000, atk: 180, def: 120, spd: 110, crit: 26 },
+    sprites: {
+      idle:   'StoryEnemies/Final/Tenfold Sovereign/idle.png',
+      walk:   'StoryEnemies/Final/Tenfold Sovereign/walk.png',
+      run:    'StoryEnemies/Final/Tenfold Sovereign/run.png',
+      sprint: 'StoryEnemies/Final/Tenfold Sovereign/sprint.png',
+      attack: 'StoryEnemies/Final/Tenfold Sovereign/attack.png',
+      portrait: 'StoryEnemies/Final/Tenfold Sovereign/idle.png',
+      lifeBar: '', manaBar: '', namePlate: '',
+      backgrounds: ['StoryEnemies/Final/Tenfold Sovereign/background.png']
+    },
+    skills: {
+      basic:    { name: 'Sovereign Strike',   type: 'Basic Skill',   desc: 'An unstoppable blow from the sovereign.',     icon:'', manaCost: 0,  damage: 170, cooldown: 0, frames: [] },
+      special:  { name: 'Tenfold Judgement',  type: 'Special Skill', desc: 'Calls down ten simultaneous blasts.',          icon:'', manaCost: 10, damage: 240, cooldown: 3, frames: [] },
+      ultimate: { name: 'Absolute Dominion',  type: 'Ultimate Skill',desc: 'The final, world-ending move of the sovereign.',icon:'', manaCost: 20, damage: 500, cooldown: 6, frames: [] }
+    }
+  },
+};
+
+// ── GAME STATE ────────────────────────────────────────────────
+const Game = {
+  user: null,
+  selectedHero: null,
+  storyChapter: 1,
+  storyStage: 1,
+  _readSession() {
+    // 1st: try safeLocalStorage (survives MIT App Inventor WebViewer page navigation)
     try {
-      const res = await apiCall(p);
-      if (res && res.success) {
-        flushed++;
-        if (res.newTotalScore !== undefined && res.newTotalScore > (user.totalScore || 0)) {
-          user.totalScore = res.newTotalScore;
-          Game.login(user);
-        }
-        // Push hero level that was earned with this offline battle
-        if (p.heroID) {
-          const lvls = JSON.parse(safeLocalStorage.getItem(KEY.levels()) || '{}');
-          apiCall({ action:'setHeroLevel', userID:user.userID,
-                    heroID:p.heroID, level:lvls[p.heroID]||1, xp:lvls[p.heroID+'_xp']||0 });
-        }
-      } else {
-        remaining.push(p);
+      const raw = safeLocalStorage.getItem('TENFOLD_SESSION');
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  },
+  _writeSession() {
+    try {
+      const data = JSON.stringify({user:this.user, selectedHero:this.selectedHero});
+      safeLocalStorage.setItem('TENFOLD_SESSION', data);
+    } catch (e) {}
+  },
+  login(data) { this.user = data; this._writeSession(); },
+  isAdmin() { return !!(this.user && this.user.isAdmin); },
+  logout() { this.user=null; this.selectedHero=null; safeLocalStorage.removeItem('TENFOLD_SESSION'); window.location.href='index.html'; },
+  loadUser() {
+    if (this.user) return this.user;
+    const saved=this._readSession();
+    if (saved && saved.user) { this.user=saved.user; this.selectedHero=saved.selectedHero||null; }
+    return this.user;
+  },
+  requireLogin() {
+    if (!this.loadUser()) { window.location.href='index.html'; return false; }
+    return true;
+  },
+  selectHero(id) { this.selectedHero=id; this.loadUser(); this._writeSession(); },
+  getSelectedHero() {
+    if (this.selectedHero) return this.selectedHero;
+    const saved=this._readSession();
+    if (saved && saved.selectedHero) { this.selectedHero=saved.selectedHero; return this.selectedHero; }
+    return null;
+  },
+
+  // Fetch the authoritative TotalScore directly from Google Sheets.
+  // This prevents a stale local/session score from remaining visible.
+  async syncScore() {
+    this.loadUser();
+    if (!this.user || !this.user.userID) return null;
+
+    try {
+      const res = await apiCall({ action: 'getScore', userID: this.user.userID }, 6500);
+      if (res && res.success && res.totalScore !== undefined) {
+        const score = Math.max(0, parseInt(res.totalScore, 10) || 0);
+        this.user.totalScore = score;
+        this._writeSession();
+        try {
+          safeLocalStorage.setItem('tenfold_score_cache_' + this.user.userID, String(score));
+          safeLocalStorage.setItem('tenfold_score_cache', String(score));
+        } catch (_) {}
+        return score;
       }
-    } catch(e) {
-      remaining.push(p);
-      break; // still offline, stop trying
-    }
+    } catch (_) {}
+    return null;
   }
+};
 
-  safeLocalStorage.setItem(KEY.pending(), JSON.stringify(remaining));
-
-  if (flushed > 0) {
-    updateScoreUI(user.totalScore || 0);
-    showToast(`✅ ${flushed} offline battle${flushed > 1 ? 's' : ''} synced!`, 'success');
-  }
-  return flushed;
-}
-
-// ── DOWNLOAD FULL PLAYER DATA (server → local) ───────────────
-// Pulls hero levels/XP, unlocked heroes, story progress from
-// the server and caches everything locally for offline use.
-// Skills are derived from story progress (no separate server field).
-async function downloadPlayerData() {
-  // ── Hero levels + unlocked heroes ──
-  const charsRes = await apiCall({ action:'getChars', userID:user.userID });
-  if (charsRes.success && charsRes.characters) {
-    const lvls     = JSON.parse(safeLocalStorage.getItem(KEY.levels())   || '{}');
-    const unlockedSet = new Set(JSON.parse(safeLocalStorage.getItem(KEY.unlocked()) || '["aeron"]'));
-
-    charsRes.characters.forEach(c => {
-      const servLv = c.level || 1;
-      const servXP = c.xp    || 0;
-      const localLv = lvls[c.heroID] || 1;
-
-      // Take the HIGHER level between server and local (never downgrade)
-      if (servLv > localLv) {
-        lvls[c.heroID]         = servLv;
-        lvls[c.heroID + '_xp'] = servXP;
-      } else if (servLv === localLv) {
-        lvls[c.heroID + '_xp'] = Math.max(lvls[c.heroID + '_xp'] || 0, servXP);
-      }
-
-      // NOTE: We do NOT trust c.unlocked from the server for unlock display.
-      // Hero unlocks are derived strictly from story progress after it loads.
-    });
-
-    safeLocalStorage.setItem(KEY.levels(), JSON.stringify(lvls));
-    // Do NOT save unlocked here — it will be rebuilt from story progress below.
-  }
-
-  // ── Story progress ──
-  const storyRes = await apiCall({ action:'getStory', userID:user.userID });
-  if (storyRes.success && storyRes.progress) {
-    const prog = JSON.parse(safeLocalStorage.getItem(KEY.story()) || '{}');
-    storyRes.progress.forEach(p => {
-      const key = `${p.chapter}_${p.stage}`;
-      const local = prog[key] || {};
-      // Take best stars between server and local
-      if (p.completed && (!local.completed || (p.stars || 0) > (local.stars || 0))) {
-        prog[key] = { completed: true, stars: p.stars || 0 };
-      }
-    });
-    safeLocalStorage.setItem(KEY.story(), JSON.stringify(prog));
-
-    // ── Rebuild hero unlocks strictly from story progress ─────
-    // aeron is always free. Every other hero unlocks only when their
-    // required chapter boss (stage 5) is cleared in story progress.
-    const HERO_UNLOCK_AFTER_CH_DB = {
-      aeron:0, lyra:1, kael:2, riven:3, selene:4,
-      draven:5, mira:6, orion:7, brutus:8, elysia:9
+// ── API HELPER — PC / DESKTOP BROWSER ──────────────────────────
+// Strategy:
+//   1. Try fetch() first — works on most networks since Google Apps Script
+//      returns CORS headers (Access-Control-Allow-Origin: *) for GET requests.
+//   2. If fetch() fails (network block, opaque redirect, etc.), fall back to
+//      JSONP via a <script> tag so it still works on stricter networks.
+//
+// Code.gs must support the "callback" query parameter for JSONP to work.
+async function apiCall(params, timeoutMs = 10000) {
+  if (!API_URL || API_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    return {
+      success: false,
+      code: 'API_NOT_CONFIGURED',
+      message: 'Google Apps Script Web App URL is not configured.'
     };
-    const rebuiltUnlocked = ['aeron'];
-    for (const [hid, afterCh] of Object.entries(HERO_UNLOCK_AFTER_CH_DB)) {
-      if (afterCh === 0) continue;
-      const bossKey = `${afterCh}_5`;
-      if (prog[bossKey] && prog[bossKey].completed && !rebuiltUnlocked.includes(hid)) {
-        rebuiltUnlocked.push(hid);
+  }
+
+  let url;
+  try {
+    url = new URL(API_URL, window.location.href);
+  } catch (_) {
+    return {
+      success: false,
+      code: 'INVALID_API_URL',
+      message: 'Invalid Google Apps Script Web App URL.'
+    };
+  }
+
+  // Attach all params to the URL for GET request
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.set(key, String(value));
+    }
+  });
+
+  const effectiveTimeout = Math.max(3000, Number(timeoutMs) || 10000);
+
+  // ── ATTEMPT 1: fetch() ───────────────────────────────────────
+  try {
+    const controller = new AbortController();
+    const fetchTimer = setTimeout(() => controller.abort(), effectiveTimeout);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      signal: controller.signal,
+      redirect: 'follow'
+    });
+    clearTimeout(fetchTimer);
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data && typeof data === 'object') return data;
+    }
+    // If fetch returned a non-ok status, fall through to JSONP
+  } catch (_fetchErr) {
+    // Network error, CORS block, or abort — fall through to JSONP
+  }
+
+  // ── ATTEMPT 2: JSONP fallback ────────────────────────────────
+  return new Promise((resolve) => {
+    const jsonpUrl = new URL(url.toString());
+
+    const callbackName =
+      '__TENFOLD_API_' +
+      Date.now().toString(36) +
+      '_' +
+      Math.random().toString(36).slice(2);
+
+    jsonpUrl.searchParams.set('callback', callbackName);
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.referrerPolicy = 'no-referrer-when-downgrade';
+
+    let finished = false;
+    let timer = null;
+
+    function cleanup() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      try { delete window[callbackName]; } catch (_) { window[callbackName] = undefined; }
+    }
+
+    function finish(result) {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      if (result && typeof result === 'object') {
+        resolve(result);
+      } else {
+        resolve({
+          success: false,
+          code: 'INVALID_RESPONSE',
+          message: 'The server returned an invalid response.'
+        });
       }
     }
-    safeLocalStorage.setItem(KEY.unlocked(), JSON.stringify(rebuiltUnlocked));
-    unlocked = rebuiltUnlocked;
 
-    // ── Derive skill unlocks from story progress ──────────────
-    // Skills are locked/unlocked based on story stage completion.
-    // Re-derive them from the merged story progress so offline and
-    // online always have the same skill state.
-    const skillUL = JSON.parse(safeLocalStorage.getItem(KEY.skills()) || '{}');
-    const ALL_HEROES = ['aeron','lyra','kael','riven','selene','draven','mira','orion','brutus','elysia'];
-    const ch1s1 = prog['1_1']?.completed;
-    const ch1s3 = prog['1_3']?.completed;
-    const ch1s4 = prog['1_4']?.completed;
-    const toGrant = [];
-    if (ch1s1) toGrant.push('basic');
-    if (ch1s3) toGrant.push('special');
-    if (ch1s4) toGrant.push('ultimate');
+    window[callbackName] = function (result) { finish(result); };
 
-    if (toGrant.length > 0) {
-      ALL_HEROES.forEach(hid => {
-        if (!skillUL[hid]) skillUL[hid] = [];
-        toGrant.forEach(t => { if (!skillUL[hid].includes(t)) skillUL[hid].push(t); });
+    script.onerror = function () {
+      finish({
+        success: false,
+        code: 'SERVER_CONNECTION_ERROR',
+        message:
+          'Cannot reach the Google Apps Script server. ' +
+          'Check your internet connection and make sure the deployment is set to "Anyone" access.'
       });
-      safeLocalStorage.setItem(KEY.skills(), JSON.stringify(skillUL));
-    }
-  }
-}
+    };
 
-// ── UPLOAD LOCAL DATA (local → server) ───────────────────────
-// Pushes hero levels that may be higher locally (from offline battles)
-// and story progress up to the server.
-async function uploadLocalData() {
-  const lvls = JSON.parse(safeLocalStorage.getItem(KEY.levels()) || '{}');
-  const prog = JSON.parse(safeLocalStorage.getItem(KEY.story())  || '{}');
+    timer = setTimeout(function () {
+      if (!finished) {
+        finish({
+          success: false,
+          code: 'SERVER_TIMEOUT',
+          timeout: true,
+          message:
+            'Server did not respond in time. Please try again — ' +
+            'Google Apps Script may be warming up.'
+        });
+      }
+    }, effectiveTimeout);
 
-  // Push all hero levels
-  const ALL_HEROES = ['aeron','lyra','kael','riven','selene','draven','mira','orion','brutus','elysia'];
-  for (const hid of ALL_HEROES) {
-    const lv = lvls[hid] || 1;
-    const xp = lvls[hid + '_xp'] || 0;
-    if (lv > 1 || xp > 0) {
-      await apiCall({ action:'setHeroLevel', userID:user.userID, heroID:hid, level:lv, xp:xp });
-    }
-  }
-
-  // Push all completed story stages
-  for (const key of Object.keys(prog)) {
-    const p = prog[key];
-    if (!p.completed) continue;
-    const [ch, st] = key.split('_');
-    await apiCall({ action:'saveStory', userID:user.userID,
-                    chapter:ch, stage:st, stars:p.stars || 1 });
-  }
-}
-
-// ── UPDATE ALL SCORE DISPLAY ELEMENTS ────────────────────────
-function updateScoreUI(score) {
-  const s = formatNumber(score);
-  const els = {
-    'nav-score':    score,
-    'banner-score': s,
-    'stat-score':   s,
-    'nav-score-mobile': score,
-  };
-  Object.entries(els).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
+    script.src = jsonpUrl.toString();
+    document.head.appendChild(script);
   });
 }
 
-// ── LOAD ALL DATA ─────────────────────────────────────────────
-async function loadDashboard() {
-
-  // ════════════════════════════════════════════════════════
-  // STEP 0 — RENDER LOCAL DATA IMMEDIATELY (no API wait)
-  // ════════════════════════════════════════════════════════
-  renderBanner();
-  renderHeroCard();
-  renderStoryProgress();
-  renderHeroesGrid();
-  renderNextUnlock();
-  renderTip();
-  renderStats(0, 0, null);
-
-  // Show cached leaderboard immediately so the spinner is replaced right away
-  try {
-    const cached = JSON.parse(safeLocalStorage.getItem(KEY.lbCache()) || 'null');
-    if (cached && cached.data && cached.data.length) {
-      renderLbFull(cached.data);
-      const meC = cached.data.find(e => e.userID === user.userID)
-                || cached.data.find(e => String(e.userID).trim().toLowerCase() === String(user.userID).trim().toLowerCase());
-      if (meC) renderStats(meC.wins || 0, meC.losses || 0, meC.rank || null);
-    } else {
-      renderLbFull([]);
-    }
-  } catch(e) {
-    renderLbFull([]);
-  }
-
-  // ════════════════════════════════════════════════════════
-  // STEP 0b — SYNC STORY PROGRESS FROM SERVER (fast, targeted)
-  // Run this before background sync so the story card shows
-  // accurate server data right away, not stale localStorage.
-  // ════════════════════════════════════════════════════════
-  if (navigator.onLine) {
-    try {
-      const storyRes = await apiCall({ action:'getStory', userID:user.userID }, 5000);
-      if (storyRes.success && storyRes.progress && storyRes.progress.length) {
-        const prog = JSON.parse(safeLocalStorage.getItem(KEY.story()) || '{}');
-        storyRes.progress.forEach(p => {
-          const key = `${p.chapter}_${p.stage}`;
-          const local = prog[key] || {};
-          if (p.completed && (!local.completed || (p.stars || 0) > (local.stars || 0))) {
-            prog[key] = { completed: true, stars: p.stars || 0 };
-          }
-        });
-        safeLocalStorage.setItem(KEY.story(), JSON.stringify(prog));
-        Object.assign(progress, prog);
-        renderStoryProgress();
-      }
-    } catch(e) { /* offline or timeout — local data is fine */ }
-  }
-
-  // ════════════════════════════════════════════════════════
-  // STEP 1 — BACKGROUND SYNC (fire and forget, never blocks UI)
-  // Use navigator.onLine for instant online check — no ping needed.
-  // ════════════════════════════════════════════════════════
-  if (navigator.onLine) {
-    flushPendingScores().catch(() => {});
-    uploadLocalData().catch(() => {});
-    downloadPlayerData().catch(() => {});
-  } else {
-    try {
-      const cachedScore = Math.max(0, parseInt(
-        safeLocalStorage.getItem(KEY.scoreCache()) || '0', 10
-      ) || 0);
-      let pendingPoints = 0;
-      const pending = JSON.parse(
-        safeLocalStorage.getItem('tenfold_pending_scores_' + user.userID) || '[]'
-      );
-      pendingPoints = pending.reduce(
-        (sum, p) => sum + (parseInt(p.pts, 10) || (p.result === 'win' ? 100 : 10)), 0
-      );
-      user.totalScore = cachedScore + pendingPoints;
-      Game.login(user);
-    } catch(e) {}
-  }
-
-  // ════════════════════════════════════════════════════════
-  // STEP 2 — LEADERBOARD (fast 5s timeout, always clears spinner)
-  // ════════════════════════════════════════════════════════
-  let entries = [];
-  try {
-    const lbRes = await apiCall({ action:'leaderboard' }, 5000);
-
-    if (lbRes && lbRes.success && lbRes.leaderboard && lbRes.leaderboard.length) {
-      entries = lbRes.leaderboard;
-      safeLocalStorage.setItem(KEY.lbCache(), JSON.stringify({ ts:Date.now(), data:entries }));
-    } else {
-      throw new Error('empty leaderboard response');
-    }
-  } catch(e) {
-    // Fall back to cache or single-user placeholder
-    try {
-      const cached = JSON.parse(safeLocalStorage.getItem(KEY.lbCache()) || 'null');
-      entries = (cached && cached.data) || [];
-    } catch(_) { entries = []; }
-
-    if (!entries.length) {
-      entries = [{ rank:1, userID:user.userID, username:user.username,
-                   totalScore:user.totalScore||0, wins:0, losses:0, winRate:'0%' }];
-    }
-  }
-
-  // Score sync — server is authoritative
-  const me = entries.find(e => e.userID === user.userID)
-           || entries.find(e => String(e.userID).trim().toLowerCase() === String(user.userID).trim().toLowerCase());
-
-  if (me && me.totalScore !== undefined) {
-    const serverScore = Math.max(0, parseInt(me.totalScore, 10) || 0);
-    user.totalScore = serverScore;
-    Game.login(user);
-    safeLocalStorage.setItem(KEY.scoreCache(), String(serverScore));
-  }
-
-  updateScoreUI(user.totalScore || 0);
-  renderBanner();
-  renderNextUnlock();
-
-  if (me) {
-    renderStats(me.wins || 0, me.losses || 0, me.rank || null);
-  } else {
-    const localBattles = JSON.parse(safeLocalStorage.getItem(KEY.battles()) || '[]');
-    const arenaOnly    = localBattles.filter(b => !b.storyChapter || b.storyChapter === 0);
-    const localWins    = arenaOnly.filter(b => b.result === 'win').length;
-    const localLosses  = arenaOnly.filter(b => b.result === 'lose').length;
-    renderStats(localWins, localLosses, null);
-  }
-
-  // Always render leaderboard — this clears the spinner no matter what
-  renderLbFull(entries);
-  renderStoryProgress();
+// ── STAT SCALING ──────────────────────────────────────────────
+function getScaledStats(heroId, level = 1) {
+  const entity = HEROES[heroId] || STORY_ENEMIES[heroId];
+  const base = entity.stats;
+  const lv   = Math.max(1, level);
+  const mult = 1 + (lv - 1) * 0.08;
+  return {
+    hp:   Math.floor(base.hp   * mult),
+    atk:  Math.floor(base.atk  * mult),
+    def:  Math.floor(base.def  * mult),
+    spd:  Math.floor(base.spd  * mult),
+    crit: Math.min(base.crit + (lv - 1), 50)
+  };
 }
 
-function showToast(msg, type = 'info') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = `toast ${type} show`;
-  setTimeout(() => { t.className = 'toast'; }, 3000);
+// ── ARENA FLAT STATS ──────────────────────────────────────────
+// In arena (hero vs hero), ALL heroes share the same base stats
+// per level so no hero has an inherent stat advantage over another.
+// Hero identity comes from skills, not raw stats.
+// Stats grow modestly per level (+5% HP, +4% ATK/DEF, +3 SPD, +1% CRIT).
+// SPD stays equal so no hero is inherently faster in arena.
+function getArenaStats(level = 1) {
+  const lv   = Math.max(1, level);
+  return {
+    hp:   Math.floor(1000 * (1 + (lv - 1) * 0.05)),  // 1000 → 1050 → 1100 …
+    atk:  Math.floor(120  * (1 + (lv - 1) * 0.04)),  // 120  → 124  → 129  …
+    def:  Math.floor(80   * (1 + (lv - 1) * 0.04)),  // 80   → 83   → 86   …
+    spd:  90 + (lv - 1) * 3,                          // 90   → 93   → 96   … (equal per level)
+    crit: Math.min(15 + (lv - 1), 40)                 // 15%  → 16%  → 17%  … capped at 40%
+  };
 }
 
-// ── ENTER ARENA (with skill-unlock gate) ──────────────────────
-// New players must fully unlock their hero's skills via Story Mode
-// before they can enter Hero vs Hero arena battles.
-function goToArena() {
-  if (!Game.isAdmin()) {
-    const heroId   = Game.getSelectedHero() || 'aeron';
-    const skillUL  = JSON.parse(safeLocalStorage.getItem('tenfold_skills_' + user.userID) || '{}');
-    const heroSkills = (skillUL[heroId]) || [];
-    const hasAll   = ['basic', 'special', 'ultimate'].every(t => heroSkills.includes(t));
-    if (!hasAll) {
-      const CH_HERO_NUM = {aeron:1,lyra:2,kael:3,riven:4,selene:5,draven:6,mira:7,orion:8,brutus:9,elysia:10};
-      const chNum  = CH_HERO_NUM[heroId] || 1;
-      const hints  = { basic:`Ch.${chNum} St.1`, special:`Ch.${chNum} St.3`, ultimate:`Ch.${chNum} St.4` };
-      const missing = ['basic', 'special', 'ultimate'].filter(t => !heroSkills.includes(t));
-      const needed  = missing.map(t => hints[t]).join(', ');
-      showToast(`🔒 ${HEROES[heroId]?.name || heroId} skills not fully unlocked! Complete: ${needed}`, 'error');
-      return;
-    }
-  }
-  safeSessionStorage.setItem('tenfold_battle_mode', 'arena');
-  safeSessionStorage.removeItem('tenfold_battle_enemy');
-  safeSessionStorage.removeItem('tenfold_battle_enemy_lv');
-  safeSessionStorage.removeItem('tenfold_battle_chapter');
-  safeSessionStorage.removeItem('tenfold_battle_stage');
-  safeSessionStorage.removeItem('tenfold_battle_name');
-  safeSessionStorage.removeItem('tenfold_battle_is_boss');
-  window.location.href = 'battle.html';
+// ── ELEMENT COLOR MAP ─────────────────────────────────────────
+const ELEMENT_COLORS = {
+  Fire:      '#ff4500',
+  Ice:       '#00cfff',
+  Lightning: '#ffe600',
+  Earth:     '#a0522d',
+  Light:     '#c8a8ff',
+  Dark:      '#9932cc',
+  Water:     '#00bfff',
+  Metal:     '#c0c0c0',
+  Arcane:    '#ff88ff',
+  Wind:      '#88ffcc'
+};
+
+// ── ELEMENT ICONS ─────────────────────────────────────────────
+const ELEMENT_ICONS = {
+  Fire:'🔥', Ice:'❄️', Lightning:'⚡', Earth:'🌍',
+  Light:'✨', Dark:'🌑', Water:'💧', Metal:'⚙️',
+  Arcane:'🔮', Wind:'🌪️'
+};
+
+// ── UTILITY ───────────────────────────────────────────────────
+function formatNumber(n) {
+  // TotalScore is an exact integer from Google Sheets.
+  // NEVER abbreviate 1850 as 1.9K. Every score UI uses this formatter.
+  const v = Number(n);
+  if (!Number.isFinite(v)) return 0;
+  return String(Math.trunc(v));
+}
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
 }
 
-// ── INIT ──────────────────────────────────────────────────────
-loadDashboard();
-</script>
-
-<style>#tfl-connection{position:fixed;right:10px;bottom:10px;z-index:99999;font:600 11px Arial,sans-serif;padding:5px 8px;border:1px solid rgba(240,192,64,.35);border-radius:12px;background:rgba(5,5,15,.82);color:#aaa;pointer-events:none;opacity:.8}</style>
-<div id="tfl-connection">● ONLINE</div>
-<script>(function(){function u(){var e=document.getElementById('tfl-connection');if(!e)return;e.textContent=navigator.onLine?'● ONLINE':'● OFFLINE';e.style.color=navigator.onLine?'#7ee787':'#ffcc66';}window.addEventListener('online',u);window.addEventListener('offline',u);u();})();</script>
-</body>
-</html>
+// Auto-load user on every page
+Game.loadUser();
