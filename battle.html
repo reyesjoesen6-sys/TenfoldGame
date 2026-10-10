@@ -1032,6 +1032,20 @@ function setSprite(who, state) {
     el.style.transform       = `scaleX(${getSpriteFlip(who, heroId, state)})`;
     el.style.transformOrigin = 'bottom center';
   }
+  // Re-apply status glow classes after src change — changing src resets CSS animations
+  if (B && !B.over) {
+    const burning   = who === 'player' ? B.pBurning   > 0 : B.eBurning   > 0;
+    const frozen    = who === 'player' ? B.pFrozen    > 0 : B.eFrozen    > 0;
+    const paralyzed = who === 'player' ? B.pParalyzed > 0 : B.eParalyzed > 0;
+    // Remove first, then re-add on next frame — forces browser to restart the animation
+    el.classList.remove('burning', 'frozen', 'paralyzed');
+    void el.offsetWidth; // reflow trick — flushes pending style changes
+    requestAnimationFrame(() => {
+      el.classList.toggle('burning',   burning);
+      el.classList.toggle('frozen',    frozen);
+      el.classList.toggle('paralyzed', paralyzed);
+    });
+  }
 }
 
 // ── PRELOAD BATTLE ASSETS ─────────────────────────────────────
@@ -1142,9 +1156,22 @@ function renderHUD() {
   function applyStatusVisuals(sprId, burnVal, frozenVal, paralyzedVal, burnOverlayId, frozenOverlayId, paralyzedOverlayId) {
     const spr = $(sprId);
     if (spr) {
-      spr.classList.toggle('burning',   burnVal     > 0);
-      spr.classList.toggle('frozen',    frozenVal   > 0);
-      spr.classList.toggle('paralyzed', paralyzedVal > 0);
+      // Force-restart animation: remove → reflow → re-add
+      const wasBurning   = spr.classList.contains('burning');
+      const wasFrozen    = spr.classList.contains('frozen');
+      const wasParalyzed = spr.classList.contains('paralyzed');
+      const nowBurning   = burnVal     > 0;
+      const nowFrozen    = frozenVal   > 0;
+      const nowParalyzed = paralyzedVal > 0;
+
+      // Only force-restart if status newly applied (was off, now on)
+      if ((!wasBurning && nowBurning) || (!wasFrozen && nowFrozen) || (!wasParalyzed && nowParalyzed)) {
+        spr.classList.remove('burning', 'frozen', 'paralyzed');
+        void spr.offsetWidth; // force reflow
+      }
+      spr.classList.toggle('burning',   nowBurning);
+      spr.classList.toggle('frozen',    nowFrozen);
+      spr.classList.toggle('paralyzed', nowParalyzed);
     }
     const bo = $(burnOverlayId);
     if (bo) bo.className = 'burn-overlay'      + (burnVal     > 0 ? ' active' : '');
@@ -1860,13 +1887,15 @@ function execPlayer(type, sk) {
     if (B.playerHeroId==='elysia') { B.eBurning=Math.max(B.eBurning,2); B.eParalyzed=Math.max(B.eParalyzed,2); extra=' ✨💥 CELESTIAL JUDGMENT! Arcane overload! (Burn 2 + Paralyzed 2)'; }
   }
   if (extra) logMsg(extra,'lp');
-  // Show floating status notification on enemy sprite immediately
-  if (B.eBurning > 0)    spawnStatusNotif('enemy', '🔥 BURN!',      '#ff4500');
-  if (B.eFrozen > 0)     spawnStatusNotif('enemy', '❄ FROZEN!',     '#00cfff');
-  if (B.eParalyzed > 0)  spawnStatusNotif('enemy', '⚡ PARALYZED!', '#ffe600');
-  // doRetreat (called inside spawnEffect) handles sprint→run→walk→idle
-  checkEnd(()=>{ tickStatus('enemy'); renderHUD();
-    checkEnd(()=>{ tickCD('player');
+  // Show floating status notification on enemy sprite only if still alive
+  checkEnd(() => {
+    if (B.eBurning > 0)   spawnStatusNotif('enemy', '🔥 BURN!',      '#ff4500');
+    if (B.eFrozen > 0)    spawnStatusNotif('enemy', '❄ FROZEN!',     '#00cfff');
+    if (B.eParalyzed > 0) spawnStatusNotif('enemy', '⚡ PARALYZED!', '#ffe600');
+    renderHUD();
+    tickStatus('enemy'); renderHUD();
+    tickCD('player');
+    checkEnd(() => {
       B.turn='enemy'; B.locked=false; renderHUD();
       setTimeout(enemyAI, 900+Math.random()*400);
     });
@@ -1996,11 +2025,7 @@ function execEnemy(type, sk) {
     const {dmg,isCrit} = calcDmg(B.eAtk*1.2*boost, B.pDef, arenaDmg('ultimate', sk.damage), B.eCrit+10);
     const r=applyDmg('player',dmg); spawnDmg('player',r,isCrit);
     logMsg(`💥 ${eh.name} UNLEASHES ${sk.name}!! You take ${r}${isCrit?' (CRIT!!)':''} MASSIVE DMG!`,'le');
-    // Status effects by element
-    if (eElem==='Fire')      { B.pBurning=Math.max(B.pBurning,3); extra=' 🔥🔥 Burning inferno!'; }
-    if (eElem==='Ice')       { B.pFrozen=2; extra=' ❄ Frozen solid!'; }
-    if (eElem==='Lightning') { B.pParalyzed=Math.max(B.pParalyzed,3); extra=' ⚡⚡ STORM JUDGMENT!'; }
-    // ── ULTIMATE STATUS EFFECTS (enemy) ──────────────────────
+    // ── ULTIMATE STATUS EFFECTS (enemy) — hero-specific only ──────────────
     // Aeron — Phoenix Reign: wraps player in phoenix flames (Burn 3)
     if (eId==='aeron')  { B.pBurning=Math.max(B.pBurning,3); extra=' 🔥🔥 You are engulfed in phoenix flames! (Burn 3)'; }
     // Lyra — Absolute Zero: flash-freezes the player solid (Frozen 2)
@@ -2023,16 +2048,16 @@ function execEnemy(type, sk) {
     if (eId==='elysia') { B.pBurning=Math.max(B.pBurning,2); B.pParalyzed=Math.max(B.pParalyzed,2); extra=' ✨💥 CELESTIAL JUDGMENT! Arcane overload! (Burn 2 + Paralyzed 2)'; }
   }
   if (extra) logMsg(extra,'le');
-  // Show floating status notification on player sprite immediately
-  if (B.pBurning > 0)    spawnStatusNotif('player', '🔥 BURN!',      '#ff4500');
-  if (B.pFrozen > 0)     spawnStatusNotif('player', '❄ FROZEN!',     '#00cfff');
-  if (B.pParalyzed > 0)  spawnStatusNotif('player', '⚡ PARALYZED!', '#ffe600');
-  // Apply status visuals on player sprite immediately after enemy attack
-  renderHUD();
-  // doRetreat handles sprint→run→walk→idle for enemy too
-  checkEnd(()=>{ tickStatus('player'); renderHUD();
-    checkEnd(()=>{ tickCD('enemy');
-      B.turnCount++;
+  // Show floating status notification on player sprite only if still alive
+  checkEnd(() => {
+    if (B.pBurning > 0)   spawnStatusNotif('player', '🔥 BURN!',      '#ff4500');
+    if (B.pFrozen > 0)    spawnStatusNotif('player', '❄ FROZEN!',     '#00cfff');
+    if (B.pParalyzed > 0) spawnStatusNotif('player', '⚡ PARALYZED!', '#ffe600');
+    renderHUD();
+    tickStatus('player'); renderHUD();
+    tickCD('enemy');
+    B.turnCount++;
+    checkEnd(() => {
       startPlayerTurn();
     });
   });
