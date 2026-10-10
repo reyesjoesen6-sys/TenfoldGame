@@ -494,7 +494,7 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<script src="game.js"></script>
+<script src="game.js?v=2"></script>
 <script>
   // ── EMBER PARTICLES ─────────────────────────────────────────
   (function spawnEmbers() {
@@ -556,6 +556,9 @@
   // server has not been accessed recently. The timeout must be long enough
   // to survive that cold start on both login and register.
   async function mobileApiCall(params, timeoutMs = 15000) {
+    if (typeof apiCall === 'undefined') {
+      return { success: false, message: 'Game scripts failed to load. Please refresh the page (Ctrl+Shift+R).' };
+    }
     try {
       return await Promise.race([
         apiCall(params, timeoutMs),
